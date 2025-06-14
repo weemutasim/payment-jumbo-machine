@@ -62,3 +62,34 @@ Row(
   String formattedChange = numberFormat.format(change);
 
   final NumberFormat numberFormat = NumberFormat('#,###', 'en_US');
+
+child: Row(
+  children: [
+    Text('net :', style: TextStyle(fontFamily: AppFonts.traJanProBold, fontSize: width * .023, color: AppColors.text)), //30
+    Column(
+      children: [
+        Text(' 2354', style: TextStyle(fontFamily: AppFonts.traJanProBold, fontSize: width * .023, color: AppColors.black)),
+        Divider(/* indent: 10, endIndent: 10,  */color: AppColors.black)
+      ],
+    ),
+  ],
+),
+มีวิธีไหนทำขีดข่างล่างได้บ้าง
+
+Future<void> _loadImages() async {
+    try {
+      ByteData dataLogo = await rootBundle.load('assets/images/JUMBO.png');
+      Uint8List uint8ListLogo = dataLogo.buffer.asUint8List();
+      img.Image? decodedHeadLogo = img.decodeImage(uint8ListLogo);
+      headPop = img.copyResize(decodedHeadLogo!, width: 500);
+
+      ByteData dataThank = await rootBundle.load('assets/images/thk1.png');
+      Uint8List uint8ListsThank = dataThank.buffer.asUint8List();
+      img.Image? decodedThank = img.decodeImage(uint8ListsThank);
+      thank = img.copyResize(decodedThank!, width: 500);
+
+      ByteData dataLogoGame = await rootBundle.load('assets/images/logoJR.png');
+      Uint8List uint8ListsThankGame = dataLogoGame.buffer.asUint8List();
+      img.Image? decodedThankGame = img.decodeImage(uint8ListsThankGame);
+      lgogGame = img.copyResize(decodedThankGame!, width: 500);
+      fix code ทำให้โค้ดสั้น

@@ -198,3 +198,80 @@ class _CustomInputWithNumberPadState extends State<CustomInputWithNumberPad> {
               },
             ),
           ) */
+
+         /* Future<void> _loadImages() async {
+    try {
+      ByteData dataLogo = await rootBundle.load('assets/images/JUMBO.png');
+      Uint8List uint8ListLogo = dataLogo.buffer.asUint8List();
+      img.Image? decodedHeadLogo = img.decodeImage(uint8ListLogo);
+      headPop = img.copyResize(decodedHeadLogo!, width: 500);
+
+      ByteData dataThank = await rootBundle.load('assets/images/thk1.png');
+      Uint8List uint8ListsThank = dataThank.buffer.asUint8List();
+      img.Image? decodedThank = img.decodeImage(uint8ListsThank);
+      thank = img.copyResize(decodedThank!, width: 500);
+
+      ByteData dataLogoGame = await rootBundle.load('assets/images/logoJR.png');
+      Uint8List uint8ListsThankGame = dataLogoGame.buffer.asUint8List();
+      img.Image? decodedThankGame = img.decodeImage(uint8ListsThankGame);
+      lgogGame = img.copyResize(decodedThankGame!, width: 500);
+
+      ByteData dataLogoHeadEng = await rootBundle.load('assets/images/headENG.png');
+      Uint8List uint8ListsHeadEng = dataLogoHeadEng.buffer.asUint8List();
+      img.Image? decodedHeadEng = img.decodeImage(uint8ListsHeadEng);
+      headENG = img.copyResize(decodedHeadEng!, width: 500);
+
+      ByteData dataqty2Game = await rootBundle.load('assets/images/2Game.png');
+      Uint8List uint8Listsqty2Game = dataqty2Game.buffer.asUint8List();
+      img.Image? decodedqty2Game = img.decodeImage(uint8Listsqty2Game);
+      game2 = img.copyResize(decodedqty2Game!, width: 120);
+
+      ByteData dataqty5Game = await rootBundle.load('assets/images/5Game.png');
+      Uint8List uint8Listsqty5Game = dataqty5Game.buffer.asUint8List();
+      img.Image? decodedqty5Game = img.decodeImage(uint8Listsqty5Game);
+      game5 = img.copyResize(decodedqty5Game!, width: 120);
+
+      ByteData dataqty10Game = await rootBundle.load('assets/images/10Game.png');
+      Uint8List uint8Listsqty10Game = dataqty10Game.buffer.asUint8List();
+      img.Image? decodedqty10Game = img.decodeImage(uint8Listsqty10Game);
+      game10 = img.copyResize(decodedqty10Game!, width: 120);
+
+      ByteData dataqty15Game = await rootBundle.load('assets/images/15Game.png');
+      Uint8List uint8Listsqty15Game = dataqty15Game.buffer.asUint8List();
+      img.Image? decodedqty15Game = img.decodeImage(uint8Listsqty15Game);
+      game15 = img.copyResize(decodedqty15Game!, width: 120);
+
+      ByteData dataqty20Game = await rootBundle.load('assets/images/20Game.png');
+      Uint8List uint8Listsqty20Game = dataqty20Game.buffer.asUint8List();
+      img.Image? decodedqty20Game = img.decodeImage(uint8Listsqty20Game);
+      game20 = img.copyResize(decodedqty20Game!, width: 120);
+
+      ByteData dataqty50Game = await rootBundle.load('assets/images/50Game.png');
+      Uint8List uint8Listsqty50Game = dataqty50Game.buffer.asUint8List();
+      img.Image? decodedqty50Game = img.decodeImage(uint8Listsqty50Game);
+      game50 = img.copyResize(decodedqty50Game!, width: 120);
+      
+      ByteData datafstar = await rootBundle.load('assets/images/fstar.png');
+      Uint8List uint8Listsfstar = datafstar.buffer.asUint8List();
+      img.Image? decodedfstar = img.decodeImage(uint8Listsfstar);
+      fStar = img.copyResize(decodedfstar!, width: 80); //df 500
+
+      ByteData dataline1 = await rootBundle.load('assets/images/line1.png');
+      Uint8List uint8Listsline1 = dataline1.buffer.asUint8List();
+      img.Image? decodedline1 = img.decodeImage(uint8Listsline1);
+      line1 = img.copyResize(decodedline1!, width: 550);
+
+      ByteData dataline2 = await rootBundle.load('assets/images/line2.png');
+      Uint8List uint8Listsline2 = dataline2.buffer.asUint8List();
+      img.Image? decodedline2 = img.decodeImage(uint8Listsline2);
+      line2 = img.copyResize(decodedline2!, width: 550);
+      
+      ByteData datanonrefun = await rootBundle.load('assets/images/non_refun.png');
+      Uint8List uint8Listsnonrefun = datanonrefun.buffer.asUint8List();
+      img.Image? decodednonrefun = img.decodeImage(uint8Listsnonrefun);
+      nonRefun = img.copyResize(decodednonrefun!, width: 550);
+
+    } catch (e) {
+      print(e); 
+    }
+  } */

@@ -106,8 +106,11 @@ class _HomePageState extends State<HomePage> {
         // showCursor: true,
         focusNode: _focusNode,
         controller: _controller,
-        keyboardType: TextInputType.none,
+        keyboardType: TextInputType.none, //TextInputType.none
         style: TextStyle(fontFamily: AppFonts.traJanProBold, fontSize: width * .025, color: AppColors.black),
+        onChanged: (value) { //search
+          print(value);
+        },
         decoration: InputDecoration(
         prefixIcon: Padding(
           padding: const EdgeInsets.only(left: 10, right: 10),

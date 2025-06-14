@@ -3,20 +3,22 @@ import 'package:esc_pos_printer/esc_pos_printer.dart';
 import 'package:esc_pos_utils/esc_pos_utils.dart';
 import 'package:image/image.dart' as img;
 import 'package:flutter/material.dart';
-
 import '../utils/formatDateTime.dart';
 
-const ipPrinter = "192.168.4.248";
 
-Future<void> printReceiptPopcorn(BuildContext context, int num, img.Image? head, img.Image? underLine, img.Image? thank, String saleno, String taxid, List<Map<String, dynamic>> popcorns, double total, img.Image? linr2) async {
+Future<void> printReceiptPopcorn(BuildContext context, int num, img.Image? head, img.Image? underLine, img.Image? thank, String saleno, String taxid, List<Map<String, dynamic>> popcorns, double total) async {
+  const ipPrinter = "192.168.4.248";
+  
   const PaperSize paper = PaperSize.mm80;
   final profile = await CapabilityProfile.load();
   final printer = NetworkPrinter(paper, profile);
   final PosPrintResult res = await printer.connect(ipPrinter, port: 9100);
+
   if (res != PosPrintResult.success) {
     print('Print result: ${res.msg}');
     return;
   }
+
   PosColumn buildPosCol(String value, int width, PosAlign align) {
     return PosColumn(
       text: value,
@@ -32,7 +34,7 @@ Future<void> printReceiptPopcorn(BuildContext context, int num, img.Image? head,
   printer.text('TEL : (076)385-555', styles: const PosStyles(align: PosAlign.center));
   printer.text('TAX INVOICE (ABB)', styles: const PosStyles(align: PosAlign.center));
   printer.text('NO. $saleno');
-  printer.text('Queue No. : $num', styles: const PosStyles(width: PosTextSize.size2, bold: true));  //เพิ่ม queue J1
+  printer.text('Queue No. : J$num', styles: const PosStyles(width: PosTextSize.size2, bold: true));  //เพิ่ม queue J1
   printer.image(underLine!);
   printer.text('------------------------------------------------');
   printer.row(
