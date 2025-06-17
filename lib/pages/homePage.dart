@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
 import '../apis/data.dart';
 import '../fonts/appColor.dart';
 import '../fonts/appFonts.dart';
@@ -12,11 +14,13 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  late SimpleFontelicoProgressDialog _dialog;
   final TextEditingController _controller = TextEditingController();
   FocusNode _focusNode = FocusNode();
 
   @override
   void initState() {
+    _dialog = SimpleFontelicoProgressDialog(context: context);
     _focusNode = FocusNode();
     _focusNode.addListener(_onFocusChange);
     WidgetsFlutterBinding.ensureInitialized();
@@ -38,6 +42,16 @@ class _HomePageState extends State<HomePage> {
     if (!_focusNode.hasFocus) FocusScope.of(context).requestFocus(_focusNode);
   }
 
+  void _showLoadingDialog() {
+    _dialog.show(
+      message: 'Loading...',
+      type: SimpleFontelicoProgressDialogType.custom, 
+      hideText: true, 
+      loadingIndicator: LoadingAnimationWidget.threeArchedCircle(color: AppColors.golden, size: 100), 
+      backgroundColor: Colors.transparent
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
@@ -46,7 +60,13 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: AppColors.pinkcm,
-        title: Text("Jumbo machine payment", style: TextStyle(fontFamily: AppFonts.traJanProBold, fontSize: 25, color: AppColors.white)),
+        toolbarHeight: height * .13,
+        title: Padding(
+          padding: EdgeInsets.only(left: width * .02),
+          child: Text("Jumbo machine payment", 
+            style: TextStyle(fontFamily: AppFonts.traJanProBold, fontSize: width * .025, color: AppColors.white)
+          ),
+        ),
       ),
       body: Column(
         children: [
@@ -55,22 +75,22 @@ class _HomePageState extends State<HomePage> {
             alignment: Alignment.centerLeft,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 10),
-              child: scanQRCode(width, height),
+              child: _scanQRCode(width, height),
             ),
           ),
-          // Divider(indent: 20, endIndent: 20, color: AppColors.black),
+          // const Divider(indent: 20, endIndent: 20, color: Colors.grey),
           SizedBox(
             height: height * .61,
-            child: buildContainer(),
+            child: _buildContainer(width),
           )
         ],
       ),
     );
   }
 
-  Widget buildContainer() {
+  Widget _buildContainer(double width) {
     return GridView.builder(
-      padding: const EdgeInsets.only(left: 20, right: 20, top: 0, bottom: 0),
+      padding: EdgeInsets.only(left: width * .015, right: width * .015, top: 0, bottom: 0),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 4,
         mainAxisSpacing: 8,
@@ -81,22 +101,31 @@ class _HomePageState extends State<HomePage> {
       itemBuilder: (context, index) {
         int price = prices[index];
         return GestureDetector(
-          onTap: () {
-            Navigator.push(context,
+          onTap: () async {
+            _showLoadingDialog();
+            await Future.delayed(const Duration(seconds: 3));
+            await Navigator.push(context,
               MaterialPageRoute(builder: (context) => PaymentPage(price: price)),
             );
+            _dialog.hide();
           },
           child: Card(
             color: Colors.pink[300],
             elevation: 5,
-            child: Center(child: Text('$price', style: const TextStyle(fontSize: 25))),
+            child: ListTile(
+              title: Text('Price', style: TextStyle(fontSize: 25, fontFamily: AppFonts.pgVim, fontWeight: FontWeight.bold)),
+              subtitle: Padding(
+                padding: const EdgeInsets.only(left: 10),
+                child: Text('$price', style: TextStyle(fontSize: 25, fontFamily: AppFonts.pgVim)),
+              ),
+            ),
           ),
         );
       },
     );
   }
 
-  Widget scanQRCode(double width, double height) {
+  Widget _scanQRCode(double width, double height) {
     return Container(
       width: width * 0.35,
       height: height * 0.15,
@@ -109,12 +138,20 @@ class _HomePageState extends State<HomePage> {
         keyboardType: TextInputType.none, //TextInputType.none
         style: TextStyle(fontFamily: AppFonts.traJanProBold, fontSize: width * .025, color: AppColors.black),
         onChanged: (value) { //search
-          print(value);
+          setState(() {});
         },
         decoration: InputDecoration(
-        prefixIcon: Padding(
-          padding: const EdgeInsets.only(left: 10, right: 10),
-            child: Icon(Icons.qr_code_scanner_rounded, size: width * .045, color: Colors.black),
+          prefixIcon: Padding(
+          padding: EdgeInsets.only(left: width * .01, right: width * .01),
+            child: Icon(Icons.qr_code_scanner_rounded, size: width * .045, color: AppColors.black),
+          ),
+          suffixIcon: _controller.text.isEmpty ? null : IconButton(
+            onPressed: () {
+              setState(() {
+                _controller.clear();
+              });
+            },
+            icon: Icon(Icons.close_rounded, color: AppColors.redBg, size: width * .035),
           ),
           labelText: 'Scan QR Code',
           labelStyle: TextStyle(fontFamily: AppFonts.traJanProBold, fontSize: width * .025, color: AppColors.blueReceive),

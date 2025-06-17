@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import '../utils/formatDateTime.dart';
 
 
-Future<void> printReceiptPopcorn(BuildContext context, int num, img.Image? head, img.Image? underLine, img.Image? thank, String saleno, String taxid, List<Map<String, dynamic>> popcorns, double total) async {
+Future<void> printReceiptPopcorn(BuildContext context, int num, img.Image? head, img.Image? underLine, img.Image? thank, String saleno, String taxid, List<Map<String, dynamic>> popcorns, double total, double change) async {
   const ipPrinter = "192.168.4.248";
   
   const PaperSize paper = PaperSize.mm80;
@@ -63,6 +63,8 @@ Future<void> printReceiptPopcorn(BuildContext context, int num, img.Image? head,
   printer.text('------------------------------------------------');
   printer.text('  CREDIT       ${total.toStringAsFixed(2)}', styles: const PosStyles(width: PosTextSize.size2, bold: true));
   printer.text('------------------------------------------------');
+  // printer.text('  CHANGE       ${change.toStringAsFixed(2)}', styles: const PosStyles(width: PosTextSize.size2, bold: true));
+  // printer.text('------------------------------------------------');
   printer.image(thank!);
   printer.qrcode(saleno);
   printer.text('');

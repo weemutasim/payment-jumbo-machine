@@ -3,11 +3,15 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:payment_jumbo_machine/apis/DbConnect.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
 import '../fonts/appColor.dart';
 import '../fonts/appFonts.dart';
+import '../receips/receipQRGameNew.dart';
 import '../receips/receiptPopcorn.dart';
+import '../utils/formatDateTime.dart';
 import '../utils/numberPad.dart';
 
 class PaymentPage extends StatefulWidget {
@@ -19,6 +23,7 @@ class PaymentPage extends StatefulWidget {
 }
 
 class _PaymentPageState extends State<PaymentPage> {
+  late SimpleFontelicoProgressDialog _dialog;
   final NumberFormat numberFormat = NumberFormat('#,###', 'en_US');
   final TextEditingController _controller = TextEditingController();
   img.Image? headPop, thank, headENG, fStar, line1, line2, nonRefun, combinedImage, game2, game5, game10, game15, game20, game50, select;
@@ -29,6 +34,7 @@ class _PaymentPageState extends State<PaymentPage> {
 
   @override
   void initState() {
+    _dialog = SimpleFontelicoProgressDialog(context: context);
     _loadImages();
 
     super.initState();
@@ -41,7 +47,7 @@ class _PaymentPageState extends State<PaymentPage> {
     super.dispose();
   }
 
-  img.Image combineImagesWithOffset(List<img.Image> images, int spacing, {int rightOffset = 30}) {
+  /* img.Image _combineImagesWithOffset(List<img.Image> images, int spacing, {int rightOffset = 30}) {
     if (images.isEmpty) return img.Image(1, 1);
 
     int totalWidth = 0;
@@ -62,7 +68,7 @@ class _PaymentPageState extends State<PaymentPage> {
       currentX += image.width + spacing;
     }
     return combinedImage;
-  }
+  } */
 
   void _handleKeyTap(String key) {
     if(key == 'clr') {
@@ -79,6 +85,16 @@ class _PaymentPageState extends State<PaymentPage> {
       vat = widget.price * .07;
       change = input - widget.price;
     });
+  }
+
+  void _showLoadingDialog() {
+    _dialog.show(
+      message: 'Loading...',
+      type: SimpleFontelicoProgressDialogType.custom, 
+      hideText: true, 
+      loadingIndicator: LoadingAnimationWidget.threeArchedCircle(color: AppColors.golden, size: 100), 
+      backgroundColor: Colors.transparent
+    );
   }
 
   Future<img.Image> loadAndResizeImage(String path, int width) async {
@@ -109,7 +125,7 @@ class _PaymentPageState extends State<PaymentPage> {
     }
   }
 
-  Future<img.Image> generateQRCodeWithQrFlutter(String data, double size) async {
+  /* Future<img.Image> _generateQRCode(String data, double size) async {
     final qrValidationResult = QrValidator.validate(
       data: data,
       version: QrVersions.auto,
@@ -136,7 +152,7 @@ class _PaymentPageState extends State<PaymentPage> {
     }
 
     throw Exception('Invalid QR Code data');
-  }
+  } */
 
   @override
   Widget build(BuildContext context) {
@@ -146,13 +162,15 @@ class _PaymentPageState extends State<PaymentPage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: AppColors.pinkcm,
+        toolbarHeight: height * .13,
         leading: IconButton(
           icon: Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.white, size: 30),
           onPressed: () {
+            _controller.clear();
             Navigator.of(context).pop();
           },
         ),
-        title: Text("pay", style: TextStyle(fontFamily: AppFonts.traJanProBold, fontSize: 25, color: AppColors.white)),
+        title: Text("Pay", style: TextStyle(fontFamily: AppFonts.traJanProBold, fontSize: width * .025, color: AppColors.white)),
       ),
       body: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -194,51 +212,130 @@ class _PaymentPageState extends State<PaymentPage> {
           SizedBox(width: width * .05),
           _receive(width, height),
           const SizedBox(width: 20),
-          _buildButton(130, 'cancel', Colors.red, () => Navigator.of(context).pop(), 0),
+          _buildButton(width * .1, 'cancel', Colors.red, () {
+            _controller.clear();
+            Navigator.of(context).pop();
+          }, 0, height * .15, width), //130
           const SizedBox(width: 10),
-          _buildButton(180, 'confirm', Colors.green, _controller.text.isNotEmpty ? () {
-            Dbconnect().getShoppopcorn().then((onValue) {
+          _buildButton(width * .145, 'confirm', Colors.green, _controller.text.isNotEmpty ? () async {
+            _showLoadingDialog();
+            await Future.delayed(const Duration(seconds: 5));
+            _dialog.hide();
+            print('>>>>> $change');
+
+            /*await Dbconnect().getShoppopcorn().then((onValue) async {
               String paddedRunno = onValue![0].runno!.padLeft(10, '0');
               String saleno = '${onValue[0].shopchar}$paddedRunno';
-
-              printReceiptPopcorn(context, 1, headPop, line1, thank, saleno, onValue[0].taxid!, [], 350);
-            });
-
-            /* Dbconnect().salenoGame().then((value) async {
-              final imageMap = {3000: game50!, 1500: game20!, 1350: game15!, 1000: game10!, 600:  game5!, 300:  game2!};
-
-              for (int row = 0; row < _insertDataGames.length; row++) {
-                final game = _insertDataGames[row];
-                final int quantity = game['quantity'];
-
-                for (int col = 0; col < quantity; col++) {
-                  final int price = (game['priceunit'] as double).toInt();
-                  final select = imageMap[price];
-
-                  final qrImage = await generateQRCodeWithQrFlutter(value![0].saleno!, 180);
-                  final combined = combineImagesWithOffset([fStar!, qrImage, select!], 40);
-                  await printReceiptQRGameNew(context, headENG, nonRefun, line1, thank, fStar, game, 100, value[0].saleno!, value[0].taxid!, combined, line2);
-                  await Future.delayed(const Duration(milliseconds: 400));
-                }
-              }
+              
+              //Popcorn
+               await Dbconnect().insertPopcorn(
+                api: 'http://172.2.100.14/application/query_pos_popcorn/fluttercon.php?mode=INSERT_DATA',
+                uid: 'uid',
+                arrayData: '_insertDataPopcorn',
+                saleno: saleno, // เลขที่ใบเสร็จ
+                saledate: formatDate(DateTime.now()),
+                taxid: onValue[0].taxid!, 
+                guidecode: "", //ว่าง
+                qtygood: '_totalPopcorn.toStringAsFixed(2)', //total detail
+                total: '_totalPopcorn.toStringAsFixed(2)', //total ยอดรวมหลังหักส่วนลดในรายการ
+                totRec: "", //กรณีเงินสดรับเงินมา
+                totChange: "", //กรณีเงินสดเงินทอน
+                totDiscount: "", //ส่วนลดเป็ยบาท
+                vat: 'vatPopcorn.toStringAsFixed(2)', //ภาษี total - discout
+                grandTotal: 'grandTotalPopCorn.toStringAsFixed(2)', //ราคาเต็มลบภาษี total - discout - vat
+                idCard: '', //credit 4 ตัวท้าย
+                flag: "W", //กรณีเงินสดเป็น W ปกติเป็น N
+                shopcode: onValue[0].shopchar!,
+                location: onValue[0].shopname!, 
+                personId: "", //ว่าง
+                staffcode: "", //ว่าง
+                sysdate: formatDateTime(DateTime.now()),
+                cardtype: "100", //100 เงินสด 101 credit
+                accode: "100", //100 เงินสด 101 credit
+                saleuser: "self",
+                totCreditcard: '_totalPopcorn.toStringAsFixed(2)', //ยอดเงินเครดิต
+                billtype: "", //ว่าง
+                queue: '_queue.toString()',
+                entcode: "", //ว่าง
+                voucher: "", //ว่าง
+                coupon: "", //ว่าง
+                totCoupon: "", //ว่าง
+              ).then((value) async {
+                await printReceiptPopcorn(context, 1, headPop, line1, thank, saleno, onValue[0].taxid!, [], 350, change);
+              });
             }); */
-          } : null, 1)
+
+            //Games
+            /* await Dbconnect().salenoGame().then((onValue) async {
+              await Dbconnect().insertGamescard(
+                api: 'http://172.2.100.14/application/query_pos_popcorn/fluttercon.php?mode=INSERT_DATA_GAME&location=J8',
+                arrayData: '_insertDataGames',
+                uid: '',
+                saleno: 'onValue![0].saleno!', 
+                saledate: formatDate(DateTime.now()), 
+                taxid: 'onValue[0].taxid!', 
+                guidecode: "", 
+                qtygood: '_totalGames.toStringAsFixed(2)', 
+                total: '_totalGames.toStringAsFixed(2)', 
+                totRec: "", 
+                totChange: "", 
+                totDiscount: "", 
+                vat: 'vatGame.toStringAsFixed(2)', 
+                grandTotal: 'grandTotalGames.toStringAsFixed(2)', 
+                idCard: '', 
+                flag: "W", 
+                shopcode: 'onValue[0].shopcode!', 
+                location: 'onValue[0].shopname!', 
+                personId: "", 
+                staffcode: "", 
+                sysdate: formatDateTime(DateTime.now()), 
+                cardtype: "100", 
+                accode: "100", 
+                saleuser: "self", 
+                totCreditcard: '_totalGames.toStringAsFixed(2)', 
+                billtype: "", 
+                entcode: "", 
+                voucher: "", 
+                precentDiscount: "", 
+                coupon: ""
+              ).then((value) async {
+                final imageMap = {3000: game50!, 1500: game20!, 1350: game15!, 1000: game10!, 600:  game5!, 300:  game2!};
+
+                for (int row = 0; row < _insertDataGames.length; row++) {
+                  final game = _insertDataGames[row];
+                  final int quantity = game['quantity'];
+
+                  for (int col = 0; col < quantity; col++) {
+                    final int price = (game['priceunit'] as double).toInt();
+                    final select = imageMap[price];
+
+                    final qrImage = await _generateQRCode(onValue![0].saleno!, 180);
+                    final combined = _combineImagesWithOffset([fStar!, qrImage, select!], 40);
+                    await printReceiptQRGameNew(context, headENG, nonRefun, line1, thank, fStar, game, 100, onValue[0].saleno!, onValue[0].taxid!, combined, line2);
+                    await Future.delayed(const Duration(milliseconds: 400));
+                  }
+                }
+              });
+            }); */
+
+            Navigator.of(context).pop();
+          } : null, 1, height * .15, width)
         ],
       ),
     );
   }
 
-  Widget _buildButton(double width, String title, Color color, VoidCallback? onPressed, int chk) {
+  Widget _buildButton(double width, String title, Color color, VoidCallback? onPressed, int chk, double height, double size) {
     return GestureDetector(
       onTap: onPressed,
       child: Container(
         width: width,
-        height: 115,
+        height: height, //115
         decoration: BoxDecoration(
           border: Border.all(color: (chk == 1 && _controller.text.isEmpty) ? Colors.grey : color, width: 3),
           borderRadius: BorderRadius.circular(8)
         ),
-        child: Center(child: Text(title, style: TextStyle(fontFamily: AppFonts.traJanPro, fontSize: 25, fontWeight: FontWeight.bold, color: (chk == 1 && _controller.text.isEmpty) ? Colors.grey : color))),
+        child: Center(child: Text(title, style: TextStyle(fontFamily: AppFonts.traJanPro, fontSize: size * .02, fontWeight: FontWeight.bold, color: (chk == 1 && _controller.text.isEmpty) ? Colors.grey : color))),
       ),
     );
   }
@@ -273,7 +370,7 @@ class _PaymentPageState extends State<PaymentPage> {
             children: [
               Text(' $value',
                 style: TextStyle(fontFamily: AppFonts.traJanProBold, fontSize: width * .025, color: colorValue)),
-              const SizedBox(height: 2),
+              SizedBox(height: height * .005), //2
               Container(
                 width: width * .15,
                 height: 1,
@@ -294,7 +391,7 @@ class _PaymentPageState extends State<PaymentPage> {
         readOnly: true,
         showCursor: false, // ||?
         controller: TextEditingController(
-          text: _controller.text.isNotEmpty ? numberFormat.format(double.tryParse(_controller.text) ?? 0) : '',
+          text: _controller.text.isNotEmpty ? numberFormat.format(double.tryParse(_controller.text) ?? 0) : '0',
         ),
         keyboardType: TextInputType.none,
         style: TextStyle(fontFamily: AppFonts.traJanProBold, fontSize: width * .04, color: (_controller.text.isEmpty ? .0 : double.parse(_controller.text)) >= widget.price ? Colors.green : Colors.red[400]),
