@@ -57,7 +57,7 @@ Future<void> printReceiptPopcorn(BuildContext context, int num, img.Image? head,
     );
   });
   // printer.text('------------------------------------------------');
-  // printer.text('     SUBTOTAL                         ${total.toStringAsFixed(2)}');
+  // printer.text('  SUBTOTAL        ${total.toStringAsFixed(2)}');
   printer.text('------------------------------------------------');
   printer.text('  TOTAL        ${total.toStringAsFixed(2)}', styles: const PosStyles(width: PosTextSize.size2, bold: true));
   printer.text('------------------------------------------------');

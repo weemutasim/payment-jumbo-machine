@@ -103,7 +103,7 @@ class _HomePageState extends State<HomePage> {
         return GestureDetector(
           onTap: () async {
             _showLoadingDialog();
-            await Future.delayed(const Duration(seconds: 3));
+            await Future.delayed(const Duration(seconds: 2));
             await Navigator.push(context,
               MaterialPageRoute(builder: (context) => PaymentPage(price: price)),
             );

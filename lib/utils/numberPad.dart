@@ -20,6 +20,15 @@ class _NumberPadState extends State<NumberPad> {
     'clr', '0', 'del',
   ];
 
+  Color _getBackgroundColor(String key) {
+    if (widget.control.isEmpty && (key == 'del' || key == 'clr')) {
+      return Colors.grey;
+    }
+    if (key == 'del') return Colors.redAccent;
+    if (key == 'clr') return Colors.orangeAccent;
+    return AppColors.pinkcm;
+  }
+
   @override
   Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
@@ -37,7 +46,7 @@ class _NumberPadState extends State<NumberPad> {
           },
           style: ElevatedButton.styleFrom(
             padding: const EdgeInsets.all(24),
-            backgroundColor: (key == 'del') ? (widget.control.isNotEmpty ? Colors.redAccent : Colors.grey) : key == 'clr'  ? Colors.orangeAccent : AppColors.pinkcm,
+            backgroundColor: _getBackgroundColor(key),
             elevation: 10,
           ),
           child: Text(key,

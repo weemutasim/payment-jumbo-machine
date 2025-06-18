@@ -185,8 +185,9 @@ class _PaymentPageState extends State<PaymentPage> {
                 _buildContainerRow(width, height, 'Net Total', widget.price.toStringAsFixed(2), AppColors.pinkcm, 20),
                 _buildContainerRow(width, height, 'Total', widget.price.toStringAsFixed(2), AppColors.pinkcm, 110),
                 _buildContainerRow(width, height, 'vat', vat.toStringAsFixed(2), AppColors.pinkcm, 160),
-                _buildContainerRow(width, height, 'Change', change.toStringAsFixed(2), 
-                  (_controller.text.isNotEmpty && int.parse(_controller.text) < widget.price) ? Colors.red : _controller.text == widget.price.toString() ? Colors.green : Colors.orange, 65),
+                // _buildContainerRow(width, height, 'Change', change.toStringAsFixed(2), 
+                  // (_controller.text.isNotEmpty && int.parse(_controller.text) < widget.price) ? Colors.red : _controller.text == widget.price.toString() ? Colors.green : Colors.orange, 65),
+                _buildChange(width, height)
               ],
             ),
           ),
@@ -212,12 +213,12 @@ class _PaymentPageState extends State<PaymentPage> {
           SizedBox(width: width * .05),
           _receive(width, height),
           const SizedBox(width: 20),
-          _buildButton(width * .1, 'cancel', Colors.red, () {
+          _buildButton(width * .1, 'Cancel', () {
             _controller.clear();
             Navigator.of(context).pop();
-          }, 0, height * .15, width), //130
+          }, height * .15, width), //130
           const SizedBox(width: 10),
-          _buildButton(width * .145, 'confirm', Colors.green, _controller.text.isNotEmpty ? () async {
+          _buildButton(width * .145, 'Confirm', (_controller.text.isNotEmpty && int.parse(_controller.text) >= widget.price) ? () async {
             _showLoadingDialog();
             await Future.delayed(const Duration(seconds: 5));
             _dialog.hide();
@@ -319,40 +320,64 @@ class _PaymentPageState extends State<PaymentPage> {
             }); */
 
             Navigator.of(context).pop();
-          } : null, 1, height * .15, width)
+          } : null, height * .15, width)
         ],
       ),
     );
   }
 
-  Widget _buildButton(double width, String title, Color color, VoidCallback? onPressed, int chk, double height, double size) {
+  Widget _buildChange(double width, double height) {
+    return Container(
+      width: width * .39,
+      height: height * .12,
+      margin: EdgeInsets.only(left: width * .025),
+      padding: EdgeInsets.only(left: width * .025),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        // border: Border.all(color: Colors.orangeAccent),
+        color: const ui.Color.fromARGB(50, 255, 153, 0)
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text('Change :',
+            style: TextStyle(fontFamily: AppFonts.traJanProBold, fontSize: width * .025, color: AppColors.blueReceive)),
+          const SizedBox(width: 65),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(' ${change.toStringAsFixed(2)}',
+                style: TextStyle(fontFamily: AppFonts.traJanProBold, fontSize: width * .025,
+                  color: (_controller.text.isNotEmpty && int.parse(_controller.text) < widget.price) ? Colors.red : _controller.text == widget.price.toString() ? Colors.green : Colors.orange)),
+              SizedBox(height: height * .005), //2
+              Container(
+                width: width * .15,
+                height: 1,
+                color: AppColors.black,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildButton(double width, String title, VoidCallback? onPressed, double height, double size) {
     return GestureDetector(
       onTap: onPressed,
       child: Container(
         width: width,
         height: height, //115
         decoration: BoxDecoration(
-          border: Border.all(color: (chk == 1 && _controller.text.isEmpty) ? Colors.grey : color, width: 3),
-          borderRadius: BorderRadius.circular(8)
+          border: Border.all(color: title == 'Cancel' ? Colors.red : (_controller.text.isNotEmpty && int.parse(_controller.text) >= widget.price) ? const ui.Color.fromARGB(255, 60, 114, 57) : Colors.grey, width: 3),
+          borderRadius: BorderRadius.circular(8),
+          color: title == 'Cancel' ? const ui.Color.fromARGB(255, 236, 212, 210) : (_controller.text.isNotEmpty && int.parse(_controller.text) >= widget.price) ? const ui.Color.fromARGB(255, 181, 228, 183) : null
         ),
-        child: Center(child: Text(title, style: TextStyle(fontFamily: AppFonts.traJanPro, fontSize: size * .02, fontWeight: FontWeight.bold, color: (chk == 1 && _controller.text.isEmpty) ? Colors.grey : color))),
+        child: Center(child: Text(title, style: TextStyle(fontFamily: AppFonts.traJanPro, fontSize: size * .02, fontWeight: FontWeight.bold, color: title == 'Cancel' ? Colors.red : (_controller.text.isNotEmpty && int.parse(_controller.text) >= widget.price) ? const ui.Color.fromARGB(255, 60, 114, 57) : Colors.grey))),
       ),
     );
   }
-
-  /* Widget _buildContainer(double width, String title, String total, Color colors) {
-    return SizedBox(
-      width: width * .15,
-      height: width * .1,
-      child: Column(
-        children: [
-          Text(title, style: TextStyle(fontFamily: AppFonts.traJanProBold, fontSize: width * .023, color: AppColors.text)), //30
-          Text(total, style: TextStyle(fontFamily: AppFonts.traJanProBold, fontSize: width * .023, color: colors)),
-          Divider(indent: 10, endIndent: 10, color: AppColors.black)
-        ],
-      ),
-    );
-  } */
 
   Widget _buildContainerRow(double width, double height, String title, String value, Color colorValue, double range) {
     return Container(
