@@ -1,22 +1,27 @@
+import 'package:dio/dio.dart';
 import 'package:image/image.dart' as img;
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
-import 'package:payment_jumbo_machine/apis/DbConnect.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
+import '../apis/DbConnect.dart';
 import '../fonts/appColor.dart';
 import '../fonts/appFonts.dart';
+import '../model/mdDetail.dart';
+import '../model/mdPopcornTMP.dart';
 import '../receips/receipQRGameNew.dart';
 import '../receips/receiptPopcorn.dart';
 import '../utils/formatDateTime.dart';
 import '../utils/numberPad.dart';
 
 class PaymentPage extends StatefulWidget {
-  final int price;
-  const PaymentPage({super.key, required this.price});
+  final void Function(String) onSearchSaleno;
+  final TextEditingController controller;
+  final GetPopcornTMP data;
+  const PaymentPage({super.key, required this.onSearchSaleno, required this.controller, required this.data});
 
   @override
   State<PaymentPage> createState() => _PaymentPageState();
@@ -25,12 +30,12 @@ class PaymentPage extends StatefulWidget {
 class _PaymentPageState extends State<PaymentPage> {
   late SimpleFontelicoProgressDialog _dialog;
   final NumberFormat numberFormat = NumberFormat('#,###', 'en_US');
-  final TextEditingController _controller = TextEditingController();
+  final TextEditingController _controllNumPad = TextEditingController();
   img.Image? headPop, thank, headENG, fStar, line1, line2, nonRefun, combinedImage, game2, game5, game10, game15, game20, game50, select;
 
   // double price = 1350.00;
+  // double vat = 0.0;
   double change = 0;
-  double vat = 0.0;
 
   @override
   void initState() {
@@ -42,12 +47,12 @@ class _PaymentPageState extends State<PaymentPage> {
 
   @override
   void dispose() {
-    _controller.dispose();
+    _controllNumPad.dispose();
 
     super.dispose();
   }
 
-  /* img.Image _combineImagesWithOffset(List<img.Image> images, int spacing, {int rightOffset = 30}) {
+  img.Image _combineImagesWithOffset(List<img.Image> images, int spacing, {int rightOffset = 30}) {
     if (images.isEmpty) return img.Image(1, 1);
 
     int totalWidth = 0;
@@ -68,22 +73,22 @@ class _PaymentPageState extends State<PaymentPage> {
       currentX += image.width + spacing;
     }
     return combinedImage;
-  } */
+  }
 
   void _handleKeyTap(String key) {
     if(key == 'clr') {
-      if(_controller.text.isNotEmpty) _controller.clear();
+      if(_controllNumPad.text.isNotEmpty) _controllNumPad.clear();
     } else if (key == 'del') {
-      if (_controller.text.isNotEmpty) _controller.text = _controller.text.substring(0, _controller.text.length - 1);
+      if (_controllNumPad.text.isNotEmpty) _controllNumPad.text = _controllNumPad.text.substring(0, _controllNumPad.text.length - 1);
     } else {
-      if (_controller.text.isEmpty && key == '0') return;
-      if (_controller.text.length < 6) _controller.text += key;
+      if (_controllNumPad.text.isEmpty && key == '0') return;
+      if (_controllNumPad.text.length < 6) _controllNumPad.text += key;
     }
 
     setState(() {
-      double input = double.tryParse(_controller.text) ?? .0;
-      vat = widget.price * .07;
-      change = input - widget.price;
+      double input = double.tryParse(_controllNumPad.text) ?? .0;
+      // vat = widget.price * .07;
+      change = input - double.parse(widget.data.total ?? '0');
     });
   }
 
@@ -125,7 +130,7 @@ class _PaymentPageState extends State<PaymentPage> {
     }
   }
 
-  /* Future<img.Image> _generateQRCode(String data, double size) async {
+  Future<img.Image> _generateQRCode(String data, double size) async {
     final qrValidationResult = QrValidator.validate(
       data: data,
       version: QrVersions.auto,
@@ -152,7 +157,7 @@ class _PaymentPageState extends State<PaymentPage> {
     }
 
     throw Exception('Invalid QR Code data');
-  } */
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -166,7 +171,9 @@ class _PaymentPageState extends State<PaymentPage> {
         leading: IconButton(
           icon: Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.white, size: 30),
           onPressed: () {
-            _controller.clear();
+            _controllNumPad.clear();
+            widget.controller.clear();
+            widget.onSearchSaleno('');
             Navigator.of(context).pop();
           },
         ),
@@ -181,12 +188,10 @@ class _PaymentPageState extends State<PaymentPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 SizedBox(height: height * .05),
-                _buildContainerRow(width, height, 'Net', widget.price.toInt().toString(), AppColors.pinkcm, 150),
-                _buildContainerRow(width, height, 'Net Total', widget.price.toStringAsFixed(2), AppColors.pinkcm, 20),
-                _buildContainerRow(width, height, 'Total', widget.price.toStringAsFixed(2), AppColors.pinkcm, 110),
-                _buildContainerRow(width, height, 'vat', vat.toStringAsFixed(2), AppColors.pinkcm, 160),
-                // _buildContainerRow(width, height, 'Change', change.toStringAsFixed(2), 
-                  // (_controller.text.isNotEmpty && int.parse(_controller.text) < widget.price) ? Colors.red : _controller.text == widget.price.toString() ? Colors.green : Colors.orange, 65),
+                _buildContainerRow(width, height, 'Net', widget.data.total.toString(), AppColors.pinkcm, 150),
+                _buildContainerRow(width, height, 'Net Total', double.parse(widget.data.total!).toStringAsFixed(2), AppColors.pinkcm, 20),
+                _buildContainerRow(width, height, 'Total', double.parse(widget.data.total!).toStringAsFixed(2), AppColors.pinkcm, 110),
+                _buildContainerRow(width, height, 'vat', widget.data.vat.toString(), AppColors.pinkcm, 160),
                 _buildChange(width, height)
               ],
             ),
@@ -201,7 +206,7 @@ class _PaymentPageState extends State<PaymentPage> {
               ),
               child: NumberPad(
                 onPressed: (String key) => _handleKeyTap(key),
-                control: _controller.text,
+                control: _controllNumPad.text,
               ),
             ),
           ),
@@ -214,112 +219,120 @@ class _PaymentPageState extends State<PaymentPage> {
           _receive(width, height),
           const SizedBox(width: 20),
           _buildButton(width * .1, 'Cancel', () {
-            _controller.clear();
+            _controllNumPad.clear();
+            widget.onSearchSaleno('');
+            widget.controller.clear();
             Navigator.of(context).pop();
           }, height * .15, width), //130
           const SizedBox(width: 10),
-          _buildButton(width * .145, 'Confirm', (_controller.text.isNotEmpty && int.parse(_controller.text) >= widget.price) ? () async {
+          _buildButton(width * .145, 'Confirm', (_controllNumPad.text.isNotEmpty && int.parse(_controllNumPad.text) >= double.parse(widget.data.total ?? '0')) ? () async {
             _showLoadingDialog();
-            await Future.delayed(const Duration(seconds: 5));
-            _dialog.hide();
-            print('>>>>> $change');
+            String chk = widget.data.saleno!.substring(0, 4);
+            final dataDetails = ListDetails.fromJsonList(widget.data.details?.map((e) => e.toJson()).toList() ?? []);
 
-            /*await Dbconnect().getShoppopcorn().then((onValue) async {
-              String paddedRunno = onValue![0].runno!.padLeft(10, '0');
-              String saleno = '${onValue[0].shopchar}$paddedRunno';
-              
-              //Popcorn
-               await Dbconnect().insertPopcorn(
-                api: 'http://172.2.100.14/application/query_pos_popcorn/fluttercon.php?mode=INSERT_DATA',
-                uid: 'uid',
-                arrayData: '_insertDataPopcorn',
-                saleno: saleno, // เลขที่ใบเสร็จ
-                saledate: formatDate(DateTime.now()),
-                taxid: onValue[0].taxid!, 
-                guidecode: "", //ว่าง
-                qtygood: '_totalPopcorn.toStringAsFixed(2)', //total detail
-                total: '_totalPopcorn.toStringAsFixed(2)', //total ยอดรวมหลังหักส่วนลดในรายการ
-                totRec: "", //กรณีเงินสดรับเงินมา
-                totChange: "", //กรณีเงินสดเงินทอน
-                totDiscount: "", //ส่วนลดเป็ยบาท
-                vat: 'vatPopcorn.toStringAsFixed(2)', //ภาษี total - discout
-                grandTotal: 'grandTotalPopCorn.toStringAsFixed(2)', //ราคาเต็มลบภาษี total - discout - vat
-                idCard: '', //credit 4 ตัวท้าย
-                flag: "W", //กรณีเงินสดเป็น W ปกติเป็น N
-                shopcode: onValue[0].shopchar!,
-                location: onValue[0].shopname!, 
-                personId: "", //ว่าง
-                staffcode: "", //ว่าง
-                sysdate: formatDateTime(DateTime.now()),
-                cardtype: "100", //100 เงินสด 101 credit
-                accode: "100", //100 เงินสด 101 credit
-                saleuser: "self",
-                totCreditcard: '_totalPopcorn.toStringAsFixed(2)', //ยอดเงินเครดิต
-                billtype: "", //ว่าง
-                queue: '_queue.toString()',
-                entcode: "", //ว่าง
-                voucher: "", //ว่าง
-                coupon: "", //ว่าง
-                totCoupon: "", //ว่าง
-              ).then((value) async {
-                await printReceiptPopcorn(context, 1, headPop, line1, thank, saleno, onValue[0].taxid!, [], 350, change);
+            if(chk == 'ptmp') {
+              await Dbconnect().getShoppopcorn().then((onValue) async {
+                String paddedRunno = onValue![0].runno!.padLeft(10, '0');
+                String saleno = '${onValue[0].shopchar}$paddedRunno';
+
+                //Popcorn
+                 await Dbconnect().insertPopcorn(
+                  api: 'http://172.2.100.14/application/query_pos_popcorn/fluttercon.php?mode=INSERT_DATA', //'http://172.2.100.14/application/query_pos_popcorn/fluttercon.php?mode=INSERT_DATA'
+                  uid: widget.data.uid ?? '',
+                  arrayData: dataDetails,
+                  saleno: saleno, // เลขที่ใบเสร็จ
+                  saledate: formatDate(DateTime.now()),
+                  taxid: onValue[0].taxid!, 
+                  guidecode: "", //ว่าง
+                  qtygood: "0", //total detail
+                  total: widget.data.total ?? '0', //total ยอดรวมหลังหักส่วนลดในรายการ
+                  totRec: _controllNumPad.text, //กรณีเงินสดรับเงินมา
+                  totChange: change.toString(), //กรณีเงินสดเงินทอน
+                  totDiscount: "0", //ส่วนลดเป็ยบาท
+                  vat: widget.data.vat ?? '0', //ภาษี total - discout
+                  grandTotal: widget.data.grandTotal ?? '0', //ราคาเต็มลบภาษี total - discout - vat
+                  idCard: "", //credit 4 ตัวท้าย
+                  flag: "N", //กรณีเงินสดเป็น W ปกติเป็น N
+                  shopcode: "1",
+                  location: onValue[0].shopchar!, 
+                  personId: "", //ว่าง
+                  staffcode: "", //ว่าง
+                  sysdate: formatDateTime(DateTime.now()),
+                  cardtype: "100", //100 เงินสด 101 credit
+                  accode: "100", //100 เงินสด 101 credit
+                  saleuser: "",
+                  totCreditcard: "", //ยอดเงินเครดิต
+                  billtype: "", //ว่าง
+                  queue: "",
+                  entcode: "", //ว่าง
+                  voucher: "", //ว่าง
+                  coupon: "", //ว่าง
+                  totCoupon: "", //ว่าง
+                ).then((value) async {
+                  await printReceiptPopcorn(context, 1, headPop, line1, thank, saleno, onValue[0].taxid!, dataDetails!, double.parse(widget.data.total ?? '0'), change);
+                });
               });
-            }); */
+            } else if(chk == 'gtmp') {
+              await Dbconnect().salenoGame().then((onValue) async {
+                await Dbconnect().insertGamescard(
+                  api: 'http://172.2.100.14/application/query_pos_popcorn/fluttercon.php?mode=INSERT_DATA_GAME&location=J8', //'http://172.2.100.14/application/query_pos_popcorn/fluttercon.php?mode=INSERT_DATA_GAME&location=J8'
+                  arrayData: dataDetails,
+                  uid: widget.data.uid ?? '',
+                  saleno: onValue![0].saleno!, 
+                  saledate: formatDate(DateTime.now()), 
+                  taxid: onValue[0].taxid!, 
+                  guidecode: "", 
+                  qtygood: "0", 
+                  total: widget.data.total ?? '0', 
+                  totRec: _controllNumPad.text, 
+                  totChange: change.toString(), 
+                  totDiscount: "0", 
+                  vat: widget.data.vat ?? '0', 
+                  grandTotal: widget.data.grandTotal ?? '0', 
+                  idCard: "", 
+                  flag: "N", 
+                  shopcode: "1", 
+                  location: onValue[0].shopcode!, 
+                  personId: "", 
+                  staffcode: "", 
+                  sysdate: formatDateTime(DateTime.now()), 
+                  cardtype: "100", 
+                  accode: "100", 
+                  saleuser: "", 
+                  totCreditcard: "", 
+                  billtype: "", 
+                  entcode: "", 
+                  voucher: "", 
+                  precentDiscount: "", 
+                  coupon: ""
+                ).then((value) async {
+                  final imageMap = {3000: game50!, 1500: game20!, 1350: game15!, 1000: game10!, 600:  game5!, 300:  game2!};
 
-            //Games
-            /* await Dbconnect().salenoGame().then((onValue) async {
-              await Dbconnect().insertGamescard(
-                api: 'http://172.2.100.14/application/query_pos_popcorn/fluttercon.php?mode=INSERT_DATA_GAME&location=J8',
-                arrayData: '_insertDataGames',
-                uid: '',
-                saleno: 'onValue![0].saleno!', 
-                saledate: formatDate(DateTime.now()), 
-                taxid: 'onValue[0].taxid!', 
-                guidecode: "", 
-                qtygood: '_totalGames.toStringAsFixed(2)', 
-                total: '_totalGames.toStringAsFixed(2)', 
-                totRec: "", 
-                totChange: "", 
-                totDiscount: "", 
-                vat: 'vatGame.toStringAsFixed(2)', 
-                grandTotal: 'grandTotalGames.toStringAsFixed(2)', 
-                idCard: '', 
-                flag: "W", 
-                shopcode: 'onValue[0].shopcode!', 
-                location: 'onValue[0].shopname!', 
-                personId: "", 
-                staffcode: "", 
-                sysdate: formatDateTime(DateTime.now()), 
-                cardtype: "100", 
-                accode: "100", 
-                saleuser: "self", 
-                totCreditcard: '_totalGames.toStringAsFixed(2)', 
-                billtype: "", 
-                entcode: "", 
-                voucher: "", 
-                precentDiscount: "", 
-                coupon: ""
-              ).then((value) async {
-                final imageMap = {3000: game50!, 1500: game20!, 1350: game15!, 1000: game10!, 600:  game5!, 300:  game2!};
+                  for (int row = 0; row < dataDetails!.length; row++) {
+                    final game = dataDetails[row];
+                    final int quantity = double.parse(game.quantity ?? '0').toInt();
 
-                for (int row = 0; row < _insertDataGames.length; row++) {
-                  final game = _insertDataGames[row];
-                  final int quantity = game['quantity'];
+                    for (int col = 0; col < quantity; col++) {
+                      final int price = double.parse(game.priceunit ?? '0').toInt();
+                      final select = imageMap[price];
 
-                  for (int col = 0; col < quantity; col++) {
-                    final int price = (game['priceunit'] as double).toInt();
-                    final select = imageMap[price];
-
-                    final qrImage = await _generateQRCode(onValue![0].saleno!, 180);
-                    final combined = _combineImagesWithOffset([fStar!, qrImage, select!], 40);
-                    await printReceiptQRGameNew(context, headENG, nonRefun, line1, thank, fStar, game, 100, onValue[0].saleno!, onValue[0].taxid!, combined, line2);
-                    await Future.delayed(const Duration(milliseconds: 400));
+                      final qrImage = await _generateQRCode(onValue[0].saleno!, 180);
+                      final combined = _combineImagesWithOffset([fStar!, qrImage, select!], 40);
+                      await printReceiptQRGameNew(context, headENG, nonRefun, line1, thank, fStar, game, 100, onValue[0].saleno!, onValue[0].taxid!, combined, line2);
+                      await Future.delayed(const Duration(milliseconds: 400));
+                    }
                   }
-                }
+                });
               });
-            }); */
+            } else {
+              print('not chose popcorn or game');
+            }
 
-            Navigator.of(context).pop();
+            _controllNumPad.clear();
+            widget.controller.clear();
+            widget.onSearchSaleno('');
+            _dialog.hide();
+            Navigator.of(context).pop(); 
           } : null, height * .15, width)
         ],
       ),
@@ -349,7 +362,7 @@ class _PaymentPageState extends State<PaymentPage> {
             children: [
               Text(' ${change.toStringAsFixed(2)}',
                 style: TextStyle(fontFamily: AppFonts.traJanProBold, fontSize: width * .025,
-                  color: (_controller.text.isNotEmpty && int.parse(_controller.text) < widget.price) ? Colors.red : _controller.text == widget.price.toString() ? Colors.green : Colors.orange)),
+                  color: (_controllNumPad.text.isNotEmpty && int.parse(_controllNumPad.text) < double.parse(widget.data.total ?? '0')) ? Colors.red : _controllNumPad.text == widget.data.total.toString() ? Colors.green : Colors.orange)),
               SizedBox(height: height * .005), //2
               Container(
                 width: width * .15,
@@ -364,17 +377,23 @@ class _PaymentPageState extends State<PaymentPage> {
   }
 
   Widget _buildButton(double width, String title, VoidCallback? onPressed, double height, double size) {
+    Color getTextColor(String title, String text, int price) {
+      if (title == 'Cancel') return AppColors.redBg;
+      final value = double.tryParse(text);
+      return ((value ?? 0) >= price) ? const Color.fromARGB(255, 60, 114, 57) : Colors.grey;
+    }
+
     return GestureDetector(
       onTap: onPressed,
       child: Container(
         width: width,
         height: height, //115
         decoration: BoxDecoration(
-          border: Border.all(color: title == 'Cancel' ? Colors.red : (_controller.text.isNotEmpty && int.parse(_controller.text) >= widget.price) ? const ui.Color.fromARGB(255, 60, 114, 57) : Colors.grey, width: 3),
+          border: Border.all(color: getTextColor(title, _controllNumPad.text, double.parse(widget.data.total ?? '0').toInt()), width: 3),
           borderRadius: BorderRadius.circular(8),
-          color: title == 'Cancel' ? const ui.Color.fromARGB(255, 236, 212, 210) : (_controller.text.isNotEmpty && int.parse(_controller.text) >= widget.price) ? const ui.Color.fromARGB(255, 181, 228, 183) : null
+          color: title == 'Cancel' ? AppColors.cancelColor : (int.tryParse(_controllNumPad.text) ?? 0) >= double.parse(widget.data.total ?? '0') ? AppColors.confirmColor : null
         ),
-        child: Center(child: Text(title, style: TextStyle(fontFamily: AppFonts.traJanPro, fontSize: size * .02, fontWeight: FontWeight.bold, color: title == 'Cancel' ? Colors.red : (_controller.text.isNotEmpty && int.parse(_controller.text) >= widget.price) ? const ui.Color.fromARGB(255, 60, 114, 57) : Colors.grey))),
+        child: Center(child: Text(title, style: TextStyle(fontFamily: AppFonts.traJanPro, fontSize: size * .02, fontWeight: FontWeight.bold, color: getTextColor(title, _controllNumPad.text, double.parse(widget.data.total ?? '0').toInt())))),
       ),
     );
   }
@@ -414,12 +433,13 @@ class _PaymentPageState extends State<PaymentPage> {
       height: height * 0.15,
       child: TextField(
         readOnly: true,
+        
         showCursor: false, // ||?
         controller: TextEditingController(
-          text: _controller.text.isNotEmpty ? numberFormat.format(double.tryParse(_controller.text) ?? 0) : '0',
+          text: _controllNumPad.text.isNotEmpty ? numberFormat.format(double.tryParse(_controllNumPad.text) ?? 0) : '0',
         ),
         keyboardType: TextInputType.none,
-        style: TextStyle(fontFamily: AppFonts.traJanProBold, fontSize: width * .04, color: (_controller.text.isEmpty ? .0 : double.parse(_controller.text)) >= widget.price ? Colors.green : Colors.red[400]),
+        style: TextStyle(fontFamily: AppFonts.traJanProBold, fontSize: width * .04, color: (_controllNumPad.text.isEmpty ? .0 : double.parse(_controllNumPad.text)) >= double.parse(widget.data.total ?? '0') ? Colors.green : Colors.red[400]),
         decoration: InputDecoration(
           labelText: 'Receive',
           labelStyle: TextStyle(fontFamily: AppFonts.traJanProBold, fontSize: width * .03, color: AppColors.text),

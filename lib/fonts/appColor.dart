@@ -1,4 +1,5 @@
 // ignore_for_file: file_names
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 
 class AppColors {
@@ -14,4 +15,7 @@ class AppColors {
   static Color blueReceive = const Color.fromARGB(255, 20, 91, 214);
   static Color white = Colors.white;
   static Color black = Colors.black;
+
+  static Color cancelColor = const ui.Color.fromARGB(255, 236, 212, 210);
+  static Color confirmColor = const ui.Color.fromARGB(255, 181, 228, 183);
 }

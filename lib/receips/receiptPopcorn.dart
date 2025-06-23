@@ -3,10 +3,11 @@ import 'package:esc_pos_printer/esc_pos_printer.dart';
 import 'package:esc_pos_utils/esc_pos_utils.dart';
 import 'package:image/image.dart' as img;
 import 'package:flutter/material.dart';
+import '../model/mdDetail.dart';
 import '../utils/formatDateTime.dart';
 
 
-Future<void> printReceiptPopcorn(BuildContext context, int num, img.Image? head, img.Image? underLine, img.Image? thank, String saleno, String taxid, List<Map<String, dynamic>> popcorns, double total, double change) async {
+Future<void> printReceiptPopcorn(BuildContext context, int num, img.Image? head, img.Image? underLine, img.Image? thank, String saleno, String taxid, List<ListDetails> popcorns, double total, double change) async {
   const ipPrinter = "192.168.4.248";
   
   const PaperSize paper = PaperSize.mm80;
@@ -49,15 +50,15 @@ Future<void> printReceiptPopcorn(BuildContext context, int num, img.Image? head,
     final item = popcorns[index];
     printer.row( //เกิน 12 error
       [
-        buildPosCol('${item['quantity']}', 1, PosAlign.left),
-        buildPosCol('${item['salename']}', 7, PosAlign.left),
-        buildPosCol('${item['priceunit'].toInt()}', 2, PosAlign.left),
-        buildPosCol('${item['total'].toInt()}', 2, PosAlign.left),
+        buildPosCol('${double.parse(item.quantity.toString()).toInt()}', 1, PosAlign.left), //quantity
+        buildPosCol('${item.salename}', 7, PosAlign.left),
+        buildPosCol('${double.parse(item.priceunit.toString()).toInt()}', 2, PosAlign.left),
+        buildPosCol('${double.parse(item.total.toString()).toInt()}', 2, PosAlign.left),
       ]
     );
   });
   // printer.text('------------------------------------------------');
-  // printer.text('  SUBTOTAL        ${total.toStringAsFixed(2)}');
+  // printer.text('  SUBTOTAL     ${total.toStringAsFixed(2)}');
   printer.text('------------------------------------------------');
   printer.text('  TOTAL        ${total.toStringAsFixed(2)}', styles: const PosStyles(width: PosTextSize.size2, bold: true));
   printer.text('------------------------------------------------');

@@ -93,3 +93,48 @@ Future<void> _loadImages() async {
       img.Image? decodedThankGame = img.decodeImage(uint8ListsThankGame);
       lgogGame = img.copyResize(decodedThankGame!, width: 500);
       fix code ทำให้โค้ดสั้น
+
+      void _searchSaleno(String searchDocNo) {
+    print(searchDocNo);
+    searchDocNo.isNotEmpty ? _filtertmp = _listtmp.where((item) => item.saleno!.contains(searchDocNo.toLowerCase())).toList() : _filtertmp = _listtmp;
+    print('>>> ${_filtertmp![0].saleno}');
+  }
+  TextField(
+        // readOnly: true,
+        // showCursor: false,
+        focusNode: _focusNode,
+        controller: _controller,
+        keyboardType: TextInputType.text, //TextInputType.none
+        style: TextStyle(fontFamily: AppFonts.traJanProBold, fontSize: width * .025, color: AppColors.black),
+        onChanged: (value) { //search
+          setState(() => _searchSaleno(value));
+        },
+        GridView.builder(
+      padding: EdgeInsets.only(left: width * .015, right: width * .015, top: 0, bottom: 0),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 4,
+        mainAxisSpacing: 8,
+        crossAxisSpacing: 8,
+        childAspectRatio: 3, // width/height ratio of items
+      ),
+      itemCount: (_filtertmp ?? _listtmp).length,
+      itemBuilder: (context, index) {
+        final data = _listtmp[index];
+        return GestureDetector(
+
+          ทำ search ค่าไม่ตรงกัน
+
+
+          void _searchSaleno(String searchDocNo)
+          await Navigator.push(context,
+              MaterialPageRoute(builder: (context) => PaymentPage(price: int.parse(data.total ?? '0'), vat: double.parse(data.vat ?? '0.0'))),
+            );
+          ส่งไปในนี้ยังไง เพิ่อให้ใช้ได้อีกหน้าหนึ่ง
+
+
+          _listGametmp กับ _listPopcorntmp ใส่ใน
+          itemCount: (_filtertmp ?? _listPopcorntmp).length,
+      itemBuilder: (context, index) {
+        final data = (_filtertmp ?? _listPopcorntmp)[index];
+        return GestureDetector(
+          wfhws,

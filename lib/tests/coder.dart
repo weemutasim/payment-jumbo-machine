@@ -1,13 +1,8 @@
 void main() {
-var user = {
-  "firstName": "Siriphon",
-  "age": 23,
-};
+  List<String> fruits = ['apple', 'banana', 'grape', 'orange', 'kiwi'];
 
-user.addAll({
-  "lastName": "Panyathipo",
-  "age": 24,
-});
+  List<String> aFruits = fruits.where((fruit) => fruit.startsWith('e')).toList();
+  
 
-print(user);
+  print(aFruits);
 }

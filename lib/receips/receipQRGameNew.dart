@@ -3,9 +3,10 @@ import 'package:esc_pos_printer/esc_pos_printer.dart';
 import 'package:esc_pos_utils/esc_pos_utils.dart';
 import 'package:image/image.dart' as img;
 import 'package:flutter/material.dart';
+import '../model/mdDetail.dart';
 import '../utils/formatDateTime.dart';
 
-Future<void> printReceiptQRGameNew(BuildContext context, img.Image? head, img.Image? body, img.Image? underLine, img.Image? thank, img.Image? fstar, Map<String, dynamic> games, double total, String saleno, String taxid, img.Image? combinedImage, img.Image? line2) async {
+Future<void> printReceiptQRGameNew(BuildContext context, img.Image? head, img.Image? body, img.Image? underLine, img.Image? thank, img.Image? fstar, ListDetails games, double total, String saleno, String taxid, img.Image? combinedImage, img.Image? line2) async {
   const ipPrinter = "192.168.4.248";
   
   const PaperSize paper = PaperSize.mm80;
@@ -27,7 +28,7 @@ Future<void> printReceiptQRGameNew(BuildContext context, img.Image? head, img.Im
   }
 
   printer.image(head!);
-  (games['salecode'] == '0100002900011' || games['salecode'] == '0100002900023') ? printer.qrcode(saleno, size: QRSize.Size8) : printer.image(combinedImage!, align: PosAlign.center);
+  (games.salecode == '0100002900011' || games.salecode == '0100002900023') ? printer.qrcode(saleno, size: QRSize.Size8) : printer.image(combinedImage!, align: PosAlign.center);
   printer.text('');
   printer.image(body!);
   printer.text('');
@@ -54,15 +55,15 @@ Future<void> printReceiptQRGameNew(BuildContext context, img.Image? head, img.Im
   printer.row( //เกิน 12 error
     [
       buildPosCol('1', 1, PosAlign.left), //${games['quantity']}
-      buildPosCol('${games['salename']}', 7, PosAlign.left),
-      buildPosCol('${games['priceunit'].toInt()}', 2, PosAlign.left),
-      buildPosCol('${games['priceunit'].toInt()}', 2, PosAlign.left), //${games['total'].toInt()}
+      buildPosCol('${games.salename}', 7, PosAlign.left),
+      buildPosCol('${double.parse(games.priceunit ?? '0').toInt()}', 2, PosAlign.left),
+      buildPosCol('${double.parse(games.priceunit ?? '0').toInt()}', 2, PosAlign.left), //${games['total'].toInt()}
     ]
   );
   printer.image(line2!);
-  printer.text('  TOTAL        ${games['priceunit'].toStringAsFixed(2)}', styles: const PosStyles(width: PosTextSize.size2, bold: true)); //${total.toStringAsFixed(2)}
+  printer.text('  TOTAL        ${double.parse(games.priceunit ?? '0').toStringAsFixed(2)}', styles: const PosStyles(width: PosTextSize.size2, bold: true)); //${total.toStringAsFixed(2)}
   printer.image(line2);
-  printer.text('  CREDIT       ${games['priceunit'].toStringAsFixed(2)}', styles: const PosStyles(width: PosTextSize.size2, bold: true)); //${total.toStringAsFixed(2)}
+  printer.text('  CREDIT       ${double.parse(games.priceunit ?? '0').toStringAsFixed(2)}', styles: const PosStyles(width: PosTextSize.size2, bold: true)); //${total.toStringAsFixed(2)}
   printer.text('');
   printer.image(underLine);
   printer.text('');
