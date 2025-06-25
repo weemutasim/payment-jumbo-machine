@@ -275,3 +275,46 @@ class _CustomInputWithNumberPadState extends State<CustomInputWithNumberPad> {
       print(e); 
     }
   } */
+
+ /* SizedBox( //GridView
+  height: height * .61,
+  child: _buildContainer(width),
+) */
+
+ /* _showLoadingDialog();
+      await Future.delayed(const Duration(seconds: 2));
+      await Navigator.push(context,
+        MaterialPageRoute(builder: (context) => PaymentPage(onSearchSaleno: _searchSaleno, controller: _controller, data: data ?? _filterTmp![0])),
+      );
+      _dialog.hide(); */
+    /* Widget _buildContainer(double width) {
+    return GridView.builder(
+      padding: EdgeInsets.only(left: width * .015, right: width * .015, top: 0, bottom: 0),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 4,
+        mainAxisSpacing: 8,
+        crossAxisSpacing: 8,
+        childAspectRatio: 3, // width/height ratio of items
+      ),
+      itemCount: (_filterTmp ?? _listTmp).length,
+      itemBuilder: (context, index) {
+        final data = (_filterTmp ?? _listTmp)[index];
+        return GestureDetector(
+          onTap: () {
+            _searchSaleno(data.saleno!, data: data);
+          },
+          child: Card(
+            color: Colors.pink[300],
+            elevation: 5,
+            child: ListTile(
+              title: Text('Saleno', style: TextStyle(fontSize: 25, fontFamily: AppFonts.pgVim, fontWeight: FontWeight.bold)),
+              subtitle: Padding(
+                padding: const EdgeInsets.only(left: 10),
+                child: Text('${data.saleno}', style: TextStyle(fontSize: 25, fontFamily: AppFonts.pgVim, color: Colors.white)),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  } */

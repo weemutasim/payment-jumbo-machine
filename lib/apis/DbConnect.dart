@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import '../model/mdDocumentNoPopcorn.dart';
-import '../model/mdGameTMP.dart';
 import '../model/mdShoppopcorn.dart';
 import '../model/mdPopcornTMP.dart';
 import '../model/mdget_saleno_game.dart';
@@ -41,7 +40,7 @@ class Dbconnect {
         throw Exception('Failed to load data');
       }
     } catch (e) {
-      print('Error: $e');
+      print('Error ss: $e');
     }
     return null;
   }
@@ -54,7 +53,7 @@ class Dbconnect {
         print('listGameTMP ok!');
         return listGameTMP;
       } else {
-        throw Exception('Failed to load data');
+        throw Exception('Failed to load data'); //371.96
       }
     } catch (e) {
       print('Error: $e');

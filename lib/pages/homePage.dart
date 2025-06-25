@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:payment_jumbo_machine/apis/DbConnect.dart';
 import 'package:payment_jumbo_machine/model/mdDetail.dart';
@@ -19,49 +20,36 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   late SimpleFontelicoProgressDialog _dialog;
+  late FocusNode _focusNode;
   final TextEditingController _controller = TextEditingController();
-  FocusNode _focusNode = FocusNode();
   List<GetPopcornTMP> _listTmp = [];
   List<GetPopcornTMP>? _filterTmp;
+  List<Details> _details = [];
 
   Timer? _autoRefreshTimer;
   bool loadData = false;
 
   @override
   void initState() {
+    super.initState();
+
     _startAutoRefresh();
     _dBListTMP();
 
-    _dialog = SimpleFontelicoProgressDialog(context: context);
     _focusNode = FocusNode();
-    _focusNode.addListener(_onFocusChange);
-    WidgetsFlutterBinding.ensureInitialized();
-    WidgetsBinding.instance.addPostFrameCallback((focus) {
-      FocusScope.of(context).requestFocus(_focusNode);
+    _dialog = SimpleFontelicoProgressDialog(context: context);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _focusNode.requestFocus();
     });
-
-    super.initState();
   }
 
   @override
   void dispose() {
+    super.dispose();
+
     _focusNode.dispose();
     _autoRefreshTimer?.cancel();
-
-    super.dispose();
   }
-
-  /* Future<void> _dBListTMP() async {
-    await Dbconnect().getListPopcornTMP().then((onValue) async {
-      _listTmp = onValue!;
-      await Dbconnect().getListGameTMP().then((value) {
-        _listTmp.addAll(value!);
-        setState(() {
-          loadData = true;
-        });
-      });
-    });
-  } */
 
   void _startAutoRefresh() {
     _autoRefreshTimer = Timer.periodic(const Duration(seconds: 30), (timer) async {
@@ -76,6 +64,10 @@ class _HomePageState extends State<HomePage> {
 
     _listTmp = [...popcornList ?? [], ...gameList ?? []];
     setState(() {
+      if (_filterTmp != null) {
+      final keyword = _controller.text.toLowerCase();
+        _filterTmp = _listTmp.where((item) => (item.saleno ?? '').toLowerCase().contains(keyword)).toList();
+      }
       loadData = true;
     });
   }
@@ -84,21 +76,13 @@ class _HomePageState extends State<HomePage> {
     if (searchDocNo.isNotEmpty) {
       _filterTmp = _listTmp.where((item) => item.saleno!.toLowerCase().contains(searchDocNo.toLowerCase())).toList();
     } else {
-      _filterTmp = _listTmp;
+      _filterTmp!.clear();
+      _details.clear();
     }
     if(_filterTmp!.isNotEmpty && searchDocNo.length == 12) {
-      _showLoadingDialog();
-      await Future.delayed(const Duration(seconds: 2));
-      await Navigator.push(context,
-        MaterialPageRoute(builder: (context) => PaymentPage(onSearchSaleno: _searchSaleno, controller: _controller, data: data ?? _filterTmp![0])),
-      );
-      _dialog.hide();
+      _details.addAll(_filterTmp![0].details!);
     }
     setState(() {});
-  }
-
-  void _onFocusChange() {
-    if (!_focusNode.hasFocus) FocusScope.of(context).requestFocus(_focusNode);
   }
 
   void _showLoadingDialog() {
@@ -129,19 +113,65 @@ class _HomePageState extends State<HomePage> {
       ),
       body: loadData ? SingleChildScrollView(
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SizedBox(height: height * .03),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                child: _scanQRCode(width, height),
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    _scanQRCode(width, height),
+                    const SizedBox(width: 40),
+                    Row(
+                      children: [
+                        Text('TOTAL :  ', style: TextStyle(fontSize: width * .03, fontFamily: AppFonts.traJanProBold, color: AppColors.blueReceive)),
+                        Text(_details.isNotEmpty ? double.parse(_filterTmp![0].total!).toStringAsFixed(2) : '0.00', style: TextStyle(fontSize: width * .03, fontFamily: AppFonts.traJanProBold, color: AppColors.black))
+                      ],
+                    )
+                  ],
+                ),
+                _payment(context, width),
+              ],
             ),
-            // const Divider(indent: 20, endIndent: 20, color: Colors.grey),
-            SizedBox(
-              height: height * .61,
-              child: _buildContainer(width),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _headerDetaile(width, width * .075, height * .09, 'No'), //100 70
+                _headerDetaile(width, width * .19, height * .09, 'code'), //250
+                _headerDetaile(width, width * .38, height * .09, 'product name'), //500
+                _headerDetaile(width, width * .075, height * .09, 'qty'), //100
+                _headerDetaile(width, width * .11, height * .09, 'price'), //150
+                _headerDetaile(width, width * .125, height * .09, 'total'), //150
+              ],
+            ),
+            if (_details.isNotEmpty) ...List.generate(
+              _details.length, (index) {
+                final data = _details[index];
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _bodyDetaile(width, width * .075, height * .06, data.items!, int.parse(data.items!)), //100
+                    _bodyDetaile(width, width * .19, height * .06, data.salecode!, int.parse(data.items!)), //250
+                    _bodyDetaile(width, width * .38, height * .06, data.salename!, int.parse(data.items!)), //500
+                    _bodyDetaile(width, width * .075, height * .06, double.parse(data.quantity!).toInt().toString(), int.parse(data.items!)), //100
+                    _bodyDetaile(width, width * .11, height * .06, double.parse(data.priceunit!).toInt().toString(), int.parse(data.items!)), //150
+                    _bodyDetaile(width, width * .125, height * .06, double.parse(data.total!).toInt().toString(), int.parse(data.items!)), //150
+                  ],
+                );
+              },
+            ) else Container(
+              width: width,
+              height: height * .53,
+              margin: const EdgeInsets.only(left: 20, right: 20, top: 20),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppColors.pinkcm, width: 2),
+              ),
+              child: Center(
+                child: Text('No data found', style: TextStyle(fontSize: width * .02, fontFamily: AppFonts.traJanProBold, color: AppColors.pinkcm))
+              )
             )
           ],
         ),
@@ -154,35 +184,54 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildContainer(double width) {
-    return GridView.builder(
-      padding: EdgeInsets.only(left: width * .015, right: width * .015, top: 0, bottom: 0),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 4,
-        mainAxisSpacing: 8,
-        crossAxisSpacing: 8,
-        childAspectRatio: 3, // width/height ratio of items
-      ),
-      itemCount: (_filterTmp ?? _listTmp).length,
-      itemBuilder: (context, index) {
-        final data = (_filterTmp ?? _listTmp)[index];
-        return GestureDetector(
-          onTap: () {
-            _searchSaleno(data.saleno!, data: data);
-          },
-          child: Card(
-            color: Colors.pink[300],
-            elevation: 5,
-            child: ListTile(
-              title: Text('Saleno', style: TextStyle(fontSize: 25, fontFamily: AppFonts.pgVim, fontWeight: FontWeight.bold)),
-              subtitle: Padding(
-                padding: const EdgeInsets.only(left: 10),
-                child: Text('${data.saleno}', style: TextStyle(fontSize: 25, fontFamily: AppFonts.pgVim, color: Colors.white)),
-              ),
-            ),
+  Widget _payment(BuildContext context, double width) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 20),
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          side: const BorderSide(
+            color: Color.fromARGB(255, 60, 114, 57),
+            width: 5,
           ),
-        );
-      },
+          backgroundColor: const Color.fromARGB(255, 60, 114, 57),
+          padding: const EdgeInsets.symmetric(horizontal: 45, vertical: 25),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          elevation: 5
+        ),
+        onPressed: _details.isNotEmpty ? () async {
+          _showLoadingDialog();
+          await Future.delayed(const Duration(seconds: 2));
+          await Navigator.push(context,
+            MaterialPageRoute(builder: (context) => PaymentPage(onSearchSaleno: _searchSaleno, controller: _controller, data: _filterTmp![0], focusNode: _focusNode)),
+          );
+          _dialog.hide();
+        } : null,
+        child: Text('Pay', style: TextStyle(fontSize: width * .02, fontFamily: AppFonts.traJanProBold, color: _details.isNotEmpty ? Colors.white : Colors.black)),
+      ),
+    );
+  }
+
+  Widget _headerDetaile(double fSize, double width, double height, String title) {
+    return Container(
+      width: width,
+      height: height,
+      color: AppColors.pinkcm,
+      alignment: Alignment.center,
+      margin: const EdgeInsets.only(left: 3, bottom: 3),
+      child: Text(title, style: TextStyle(fontSize: fSize * .021, fontFamily: AppFonts.traJanPro, color: AppColors.white, fontWeight: FontWeight.bold)), //25
+    );
+  }
+
+  Widget _bodyDetaile(double fSize, double width, double height, String data, int qty) {
+    return Container(
+      width: width,
+      height: height,
+      color: qty % 2 == 0 ? AppColors.pinkcm : AppColors.pinkcm.withOpacity(0.5),
+      alignment: Alignment.center,
+      margin: const EdgeInsets.only(left: 3, bottom: 1),
+      child: Text(data, style: TextStyle(fontSize: fSize * .017, fontFamily: AppFonts.traJanPro, color: AppColors.white, fontWeight: FontWeight.bold)),
     );
   }
 
@@ -190,17 +239,20 @@ class _HomePageState extends State<HomePage> {
     return Container(
       width: width * 0.35,
       height: height * 0.15,
-      margin: const EdgeInsets.all(20),
+      margin: const EdgeInsets.only(left: 20, top: 10),
       child: TextField(
         // readOnly: true,
-        showCursor: true,
+        showCursor: false,
         focusNode: _focusNode,
         controller: _controller,
-        keyboardType: TextInputType.text, //TextInputType.none
+        keyboardType: TextInputType.none, //TextInputType.none
         style: TextStyle(fontFamily: AppFonts.traJanProBold, fontSize: width * .025, color: AppColors.black),
         onChanged: (value) { //search
           _searchSaleno(value);
         },
+        inputFormatters: <TextInputFormatter>[
+          LengthLimitingTextInputFormatter(12),
+        ],
         decoration: InputDecoration(
           prefixIcon: Padding(
           padding: EdgeInsets.only(left: width * .01, right: width * .01),
@@ -210,6 +262,7 @@ class _HomePageState extends State<HomePage> {
             onPressed: () {
               _controller.clear();
               _searchSaleno('');
+              _focusNode.requestFocus();
             },
             icon: Icon(Icons.close_rounded, color: AppColors.redBg, size: width * .035),
           ),

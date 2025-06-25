@@ -94,12 +94,16 @@ class GetPopcornTMP {
     coupon = json['coupon'];
     totCoupon = json['tot_coupon'];
     uid = json['uid'];
-    if (json['details'] != null) {
+    /* if (json['details'] != null) {
       details = <Details>[];
       json['details'].forEach((v) {
         details!.add(Details.fromJson(v));
       });
-    }
+    } */
+     details = (json['details'] is List)
+      ? (json['details'] as List).map((v) => Details.fromJson(v)).toList()
+      : null;
+
   }
 
   Map<String, dynamic> toJson() {

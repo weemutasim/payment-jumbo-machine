@@ -21,7 +21,8 @@ class PaymentPage extends StatefulWidget {
   final void Function(String) onSearchSaleno;
   final TextEditingController controller;
   final GetPopcornTMP data;
-  const PaymentPage({super.key, required this.onSearchSaleno, required this.controller, required this.data});
+  final FocusNode focusNode;
+  const PaymentPage({super.key, required this.onSearchSaleno, required this.controller, required this.data, required this.focusNode});
 
   @override
   State<PaymentPage> createState() => _PaymentPageState();
@@ -174,6 +175,7 @@ class _PaymentPageState extends State<PaymentPage> {
             _controllNumPad.clear();
             widget.controller.clear();
             widget.onSearchSaleno('');
+            widget.focusNode.requestFocus();
             Navigator.of(context).pop();
           },
         ),
@@ -222,6 +224,7 @@ class _PaymentPageState extends State<PaymentPage> {
             _controllNumPad.clear();
             widget.onSearchSaleno('');
             widget.controller.clear();
+            widget.focusNode.requestFocus();
             Navigator.of(context).pop();
           }, height * .15, width), //130
           const SizedBox(width: 10),
@@ -231,98 +234,96 @@ class _PaymentPageState extends State<PaymentPage> {
             final dataDetails = ListDetails.fromJsonList(widget.data.details?.map((e) => e.toJson()).toList() ?? []);
 
             if(chk == 'ptmp') {
-              await Dbconnect().getShoppopcorn().then((onValue) async {
-                String paddedRunno = onValue![0].runno!.padLeft(10, '0');
-                String saleno = '${onValue[0].shopchar}$paddedRunno';
+              final shopPopcorn = await Dbconnect().getShoppopcorn();
+                String paddedRunno = shopPopcorn![0].runno!.padLeft(10, '0');
+                String saleno = '${shopPopcorn[0].shopchar}$paddedRunno';
 
-                //Popcorn
-                 await Dbconnect().insertPopcorn(
-                  api: 'http://172.2.100.14/application/query_pos_popcorn/fluttercon.php?mode=INSERT_DATA', //'http://172.2.100.14/application/query_pos_popcorn/fluttercon.php?mode=INSERT_DATA'
-                  uid: widget.data.uid ?? '',
-                  arrayData: dataDetails,
-                  saleno: saleno, // เลขที่ใบเสร็จ
-                  saledate: formatDate(DateTime.now()),
-                  taxid: onValue[0].taxid!, 
-                  guidecode: "", //ว่าง
-                  qtygood: "0", //total detail
-                  total: widget.data.total ?? '0', //total ยอดรวมหลังหักส่วนลดในรายการ
-                  totRec: _controllNumPad.text, //กรณีเงินสดรับเงินมา
-                  totChange: change.toString(), //กรณีเงินสดเงินทอน
-                  totDiscount: "0", //ส่วนลดเป็ยบาท
-                  vat: widget.data.vat ?? '0', //ภาษี total - discout
-                  grandTotal: widget.data.grandTotal ?? '0', //ราคาเต็มลบภาษี total - discout - vat
-                  idCard: "", //credit 4 ตัวท้าย
-                  flag: "N", //กรณีเงินสดเป็น W ปกติเป็น N
-                  shopcode: "1",
-                  location: onValue[0].shopchar!, 
-                  personId: "", //ว่าง
-                  staffcode: "", //ว่าง
-                  sysdate: formatDateTime(DateTime.now()),
-                  cardtype: "100", //100 เงินสด 101 credit
-                  accode: "100", //100 เงินสด 101 credit
-                  saleuser: "",
-                  totCreditcard: "", //ยอดเงินเครดิต
-                  billtype: "", //ว่าง
-                  queue: "",
-                  entcode: "", //ว่าง
-                  voucher: "", //ว่าง
-                  coupon: "", //ว่าง
-                  totCoupon: "", //ว่าง
-                ).then((value) async {
-                  await printReceiptPopcorn(context, 1, headPop, line1, thank, saleno, onValue[0].taxid!, dataDetails!, double.parse(widget.data.total ?? '0'), change);
-                });
+              //Popcorn
+              await Dbconnect().insertPopcorn(
+                api: 'http://172.2.100.14/application/query_pos_popcorn/fluttercon.php?mode=INSERT_DATA',
+                uid: widget.data.uid ?? '',
+                arrayData: dataDetails,
+                saleno: saleno, // เลขที่ใบเสร็จ
+                saledate: formatDate(DateTime.now()),
+                taxid: shopPopcorn[0].taxid!, 
+                guidecode: "", //ว่าง
+                qtygood: "0", //total detail
+                total: widget.data.total ?? '0', //total ยอดรวมหลังหักส่วนลดในรายการ
+                totRec: _controllNumPad.text, //กรณีเงินสดรับเงินมา
+                totChange: change.toString(), //กรณีเงินสดเงินทอน
+                totDiscount: "0", //ส่วนลดเป็ยบาท
+                vat: widget.data.vat ?? '0', //ภาษี total - discout
+                grandTotal: widget.data.grandTotal ?? '0', //ราคาเต็มลบภาษี total - discout - vat
+                idCard: "", //credit 4 ตัวท้าย
+                flag: "N", //กรณีเงินสดเป็น W ปกติเป็น N
+                shopcode: "1",
+                location: shopPopcorn[0].shopchar!, 
+                personId: "", //ว่าง
+                staffcode: "", //ว่าง
+                sysdate: formatDateTime(DateTime.now()),
+                cardtype: "100", //100 เงินสด 101 credit
+                accode: "100", //100 เงินสด 101 credit
+                saleuser: "",
+                totCreditcard: "", //ยอดเงินเครดิต
+                billtype: "", //ว่าง
+                queue: "",
+                entcode: "", //ว่าง
+                voucher: "", //ว่าง
+                coupon: "", //ว่าง
+                totCoupon: "", //ว่าง
+              ).then((value) async {
+                await printReceiptPopcorn(context, value['queue'], headPop, line1, thank, saleno, shopPopcorn[0].taxid!, dataDetails!, double.parse(widget.data.total ?? '0'), change);
               });
             } else if(chk == 'gtmp') {
-              await Dbconnect().salenoGame().then((onValue) async {
-                await Dbconnect().insertGamescard(
-                  api: 'http://172.2.100.14/application/query_pos_popcorn/fluttercon.php?mode=INSERT_DATA_GAME&location=J8', //'http://172.2.100.14/application/query_pos_popcorn/fluttercon.php?mode=INSERT_DATA_GAME&location=J8'
-                  arrayData: dataDetails,
-                  uid: widget.data.uid ?? '',
-                  saleno: onValue![0].saleno!, 
-                  saledate: formatDate(DateTime.now()), 
-                  taxid: onValue[0].taxid!, 
-                  guidecode: "", 
-                  qtygood: "0", 
-                  total: widget.data.total ?? '0', 
-                  totRec: _controllNumPad.text, 
-                  totChange: change.toString(), 
-                  totDiscount: "0", 
-                  vat: widget.data.vat ?? '0', 
-                  grandTotal: widget.data.grandTotal ?? '0', 
-                  idCard: "", 
-                  flag: "N", 
-                  shopcode: "1", 
-                  location: onValue[0].shopcode!, 
-                  personId: "", 
-                  staffcode: "", 
-                  sysdate: formatDateTime(DateTime.now()), 
-                  cardtype: "100", 
-                  accode: "100", 
-                  saleuser: "", 
-                  totCreditcard: "", 
-                  billtype: "", 
-                  entcode: "", 
-                  voucher: "", 
-                  precentDiscount: "", 
-                  coupon: ""
-                ).then((value) async {
-                  final imageMap = {3000: game50!, 1500: game20!, 1350: game15!, 1000: game10!, 600:  game5!, 300:  game2!};
+              final shopGame = await Dbconnect().salenoGame();
+              await Dbconnect().insertGamescard(
+                api: 'http://172.2.100.14/application/query_pos_popcorn/fluttercon.php?mode=INSERT_DATA_GAME&location=J8',
+                arrayData: dataDetails,
+                uid: widget.data.uid ?? '',
+                saleno: shopGame![0].saleno!, 
+                saledate: formatDate(DateTime.now()), 
+                taxid: shopGame[0].taxid!, 
+                guidecode: "", 
+                qtygood: "0", 
+                total: widget.data.total ?? '0', 
+                totRec: _controllNumPad.text, 
+                totChange: change.toString(), 
+                totDiscount: "0", 
+                vat: widget.data.vat ?? '0', 
+                grandTotal: widget.data.grandTotal ?? '0', 
+                idCard: "", 
+                flag: "N", 
+                shopcode: "1", 
+                location: shopGame[0].shopcode!, 
+                personId: "", 
+                staffcode: "", 
+                sysdate: formatDateTime(DateTime.now()), 
+                cardtype: "100", 
+                accode: "100", 
+                saleuser: "", 
+                totCreditcard: "", 
+                billtype: "", 
+                entcode: "", 
+                voucher: "", 
+                precentDiscount: "", 
+                coupon: ""
+              ).then((value) async {
+                final imageMap = {3000: game50!, 1500: game20!, 1350: game15!, 1000: game10!, 600:  game5!, 300:  game2!};
 
-                  for (int row = 0; row < dataDetails!.length; row++) {
-                    final game = dataDetails[row];
-                    final int quantity = double.parse(game.quantity ?? '0').toInt();
+                for (int row = 0; row < dataDetails!.length; row++) {
+                  final game = dataDetails[row];
+                  final int quantity = double.parse(game.quantity ?? '0').toInt();
 
-                    for (int col = 0; col < quantity; col++) {
-                      final int price = double.parse(game.priceunit ?? '0').toInt();
-                      final select = imageMap[price];
+                  for (int col = 0; col < quantity; col++) {
+                    final int price = double.parse(game.priceunit ?? '0').toInt();
+                    final select = imageMap[price];
 
-                      final qrImage = await _generateQRCode(onValue[0].saleno!, 180);
-                      final combined = _combineImagesWithOffset([fStar!, qrImage, select!], 40);
-                      await printReceiptQRGameNew(context, headENG, nonRefun, line1, thank, fStar, game, 100, onValue[0].saleno!, onValue[0].taxid!, combined, line2);
-                      await Future.delayed(const Duration(milliseconds: 400));
-                    }
+                    final qrImage = await _generateQRCode(shopGame[0].saleno!, 180);
+                    final combined = _combineImagesWithOffset([fStar!, qrImage, select!], 40);
+                    await printReceiptQRGameNew(context, headENG, nonRefun, line1, thank, fStar, game, 100, shopGame[0].saleno!, shopGame[0].taxid!, combined, line2);
+                    await Future.delayed(const Duration(milliseconds: 400));
                   }
-                });
+                }
               });
             } else {
               print('not chose popcorn or game');
@@ -332,6 +333,7 @@ class _PaymentPageState extends State<PaymentPage> {
             widget.controller.clear();
             widget.onSearchSaleno('');
             _dialog.hide();
+            widget.focusNode.requestFocus();
             Navigator.of(context).pop(); 
           } : null, height * .15, width)
         ],
