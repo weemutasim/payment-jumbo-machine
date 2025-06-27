@@ -3,9 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:payment_jumbo_machine/apis/DbConnect.dart';
-import 'package:payment_jumbo_machine/model/mdDetail.dart';
 import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
-import '../apis/data.dart';
 import '../fonts/appColor.dart';
 import '../fonts/appFonts.dart';
 import '../model/mdPopcornTMP.dart';
@@ -51,13 +49,6 @@ class _HomePageState extends State<HomePage> {
     _autoRefreshTimer?.cancel();
   }
 
-  void _startAutoRefresh() {
-    _autoRefreshTimer = Timer.periodic(const Duration(seconds: 30), (timer) async {
-      await _dBListTMP();
-      print('Refresh');
-    });
-  }
-
   Future<void> _dBListTMP() async {
     final popcornList = await Dbconnect().getListPopcornTMP();
     final gameList = await Dbconnect().getListGameTMP();
@@ -72,9 +63,17 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  void _startAutoRefresh() {
+    _autoRefreshTimer = Timer.periodic(const Duration(seconds: 30), (timer) async {
+      await _dBListTMP();
+      print('Refresh');
+    });
+  }
+
   void _searchSaleno(String searchDocNo, {GetPopcornTMP? data}) async {
     if (searchDocNo.isNotEmpty) {
       _filterTmp = _listTmp.where((item) => item.saleno!.toLowerCase().contains(searchDocNo.toLowerCase())).toList();
+      if (_filterTmp!.isEmpty) _alertDialog();
     } else {
       _filterTmp!.clear();
       _details.clear();
@@ -95,6 +94,37 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  void _alertDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Error', style: TextStyle(fontFamily: AppFonts.traJanProBold, color: AppColors.pinkcm, fontSize: 30), textAlign: TextAlign.center),
+          content: Text('No data found for the given search criteria\nPlease try again.', style: TextStyle(fontFamily: AppFonts.traJanPro, fontSize: 18), textAlign: TextAlign.center),
+          actions: [
+            Center(
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  _controller.clear();
+                  _searchSaleno('');
+                  _focusNode.requestFocus();
+                  Navigator.of(context).pop();
+                }, 
+                label: Text('Retry', style: TextStyle(fontFamily: AppFonts.traJanProBold, color: AppColors.white, fontSize: 20)), 
+                icon: const Icon(Icons.refresh_rounded, size: 30, color: Colors.white), 
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.pinkcm,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  padding: const EdgeInsets.symmetric(horizontal: 190, vertical: 15)
+                )
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
@@ -103,7 +133,7 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: AppColors.pinkcm,
-        toolbarHeight: height * .13,
+        toolbarHeight: height * .1,
         title: Padding(
           padding: EdgeInsets.only(left: width * .02),
           child: Text("Jumbo machine payment", 
@@ -111,60 +141,67 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
       ),
-      body: loadData ? SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(height: height * .03),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    _scanQRCode(width, height),
-                    const SizedBox(width: 40),
-                    Row(
-                      children: [
-                        Text('TOTAL :  ', style: TextStyle(fontSize: width * .03, fontFamily: AppFonts.traJanProBold, color: AppColors.blueReceive)),
-                        Text(_details.isNotEmpty ? double.parse(_filterTmp![0].total!).toStringAsFixed(2) : '0.00', style: TextStyle(fontSize: width * .03, fontFamily: AppFonts.traJanProBold, color: AppColors.black))
-                      ],
-                    )
-                  ],
-                ),
-                _payment(context, width),
-              ],
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _headerDetaile(width, width * .075, height * .09, 'No'), //100 70
-                _headerDetaile(width, width * .19, height * .09, 'code'), //250
-                _headerDetaile(width, width * .38, height * .09, 'product name'), //500
-                _headerDetaile(width, width * .075, height * .09, 'qty'), //100
-                _headerDetaile(width, width * .11, height * .09, 'price'), //150
-                _headerDetaile(width, width * .125, height * .09, 'total'), //150
-              ],
-            ),
-            if (_details.isNotEmpty) ...List.generate(
-              _details.length, (index) {
-                final data = _details[index];
-                return Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _bodyDetaile(width, width * .075, height * .06, data.items!, int.parse(data.items!)), //100
-                    _bodyDetaile(width, width * .19, height * .06, data.salecode!, int.parse(data.items!)), //250
-                    _bodyDetaile(width, width * .38, height * .06, data.salename!, int.parse(data.items!)), //500
-                    _bodyDetaile(width, width * .075, height * .06, double.parse(data.quantity!).toInt().toString(), int.parse(data.items!)), //100
-                    _bodyDetaile(width, width * .11, height * .06, double.parse(data.priceunit!).toInt().toString(), int.parse(data.items!)), //150
-                    _bodyDetaile(width, width * .125, height * .06, double.parse(data.total!).toInt().toString(), int.parse(data.items!)), //150
-                  ],
-                );
-              },
-            ) else Container(
+      body: loadData ? Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(height: height * .03),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  _scanQRCode(width, height),
+                  const SizedBox(width: 40),
+                  Row(
+                    children: [
+                      Text('TOTAL :  ', style: TextStyle(fontSize: width * .03, fontFamily: AppFonts.traJanProBold, color: AppColors.blueReceive)),
+                      Text(_details.isNotEmpty ? double.parse(_filterTmp![0].total!).toStringAsFixed(2) : '0.00', style: TextStyle(fontSize: width * .03, fontFamily: AppFonts.traJanProBold, color: AppColors.black))
+                    ],
+                  )
+                ],
+              ),
+              Row(
+                children: [
+                  Text('${_details.length} Record', style: TextStyle(fontSize: width * .025, fontFamily: AppFonts.traJanProBold, color: Colors.deepOrange)),
+                  const SizedBox(width: 20),
+                  _payment(context, width),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _headerDetaile(width, width * .075, height * .09, 'No'), //100 70
+              _headerDetaile(width, width * .19, height * .09, 'code'), //250
+              _headerDetaile(width, width * .38, height * .09, 'product name'), //500
+              _headerDetaile(width, width * .075, height * .09, 'qty'), //100
+              _headerDetaile(width, width * .11, height * .09, 'price'), //150
+              _headerDetaile(width, width * .125, height * .09, 'total'), //150
+            ],
+          ),
+          if (_details.isNotEmpty) ...List.generate(
+            _details.length, (index) {
+              final data = _details[index];
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _bodyDetaile(width, width * .075, height * .06, data.items!, int.parse(data.items!),colors: Colors.black), //100
+                  _bodyDetaile(width, width * .19, height * .06, data.salecode!, int.parse(data.items!)), //250
+                  _bodyDetaile(width, width * .38, height * .06, data.salename!, int.parse(data.items!)), //500
+                  _bodyDetaile(width, width * .075, height * .06, double.parse(data.quantity!).toInt().toString(), int.parse(data.items!), colors: AppColors.blueReceive), //100 #00A693
+                  _bodyDetaile(width, width * .11, height * .06, double.parse(data.priceunit!).toInt().toString(), int.parse(data.items!), colors: AppColors.blueReceive), //150
+                  _bodyDetaile(width, width * .125, height * .06, double.parse(data.total!).toInt().toString(), int.parse(data.items!)), //150
+                ],
+              );
+            },
+          ) else Expanded(
+            child: Container(
               width: width,
-              height: height * .53,
-              margin: const EdgeInsets.only(left: 20, right: 20, top: 20),
+              height: height,
+              margin: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: AppColors.pinkcm, width: 2),
@@ -172,9 +209,9 @@ class _HomePageState extends State<HomePage> {
               child: Center(
                 child: Text('No data found', style: TextStyle(fontSize: width * .02, fontFamily: AppFonts.traJanProBold, color: AppColors.pinkcm))
               )
-            )
-          ],
-        ),
+            ),
+          ),
+        ],
       ) : Center(
         child: LoadingAnimationWidget.threeArchedCircle(
           color: AppColors.golden,
@@ -217,21 +254,21 @@ class _HomePageState extends State<HomePage> {
     return Container(
       width: width,
       height: height,
-      color: AppColors.pinkcm,
+      color: const Color(0xFFFF008D),
       alignment: Alignment.center,
       margin: const EdgeInsets.only(left: 3, bottom: 3),
       child: Text(title, style: TextStyle(fontSize: fSize * .021, fontFamily: AppFonts.traJanPro, color: AppColors.white, fontWeight: FontWeight.bold)), //25
     );
   }
 
-  Widget _bodyDetaile(double fSize, double width, double height, String data, int qty) {
+  Widget _bodyDetaile(double fSize, double width, double height, String data, int qty, {Color colors = Colors.black}) {
     return Container(
       width: width,
       height: height,
-      color: qty % 2 == 0 ? AppColors.pinkcm : AppColors.pinkcm.withOpacity(0.5),
+      color: qty % 2 == 0 ?  const Color.fromARGB(255, 245, 129, 158) : const Color.fromARGB(255, 245, 174, 192),
       alignment: Alignment.center,
       margin: const EdgeInsets.only(left: 3, bottom: 1),
-      child: Text(data, style: TextStyle(fontSize: fSize * .017, fontFamily: AppFonts.traJanPro, color: AppColors.white, fontWeight: FontWeight.bold)),
+      child: Text(data, style: TextStyle(fontSize: fSize * .017, fontFamily: AppFonts.traJanPro, color: colors, fontWeight: FontWeight.bold)),
     );
   }
 

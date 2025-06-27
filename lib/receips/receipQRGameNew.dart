@@ -3,6 +3,7 @@ import 'package:esc_pos_printer/esc_pos_printer.dart';
 import 'package:esc_pos_utils/esc_pos_utils.dart';
 import 'package:image/image.dart' as img;
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../model/mdDetail.dart';
 import '../utils/formatDateTime.dart';
 
@@ -35,6 +36,7 @@ Future<void> printReceiptQRGameNew(BuildContext context, img.Image? head, img.Im
   printer.image(underLine!);
   printer.text('');
   printer.text(formatDateReceip(DateTime.now()), styles: const PosStyles(align: PosAlign.center, height: PosTextSize.size2, width: PosTextSize.size2));
+  printer.text('TIME : ${DateFormat('HH:mm').format(DateTime.now())}', styles: const PosStyles(align: PosAlign.center));
   printer.text('Carnival Magic Co.,Ltd. (0000)', styles: const PosStyles(align: PosAlign.center));
   printer.text('Receipt/Tax Invoice (ABB)', styles: const PosStyles(align: PosAlign.center));
   printer.text('Tax ID : 0835557013779 (Vat Included)', styles: const PosStyles(align: PosAlign.center));

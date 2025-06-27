@@ -168,7 +168,7 @@ class _PaymentPageState extends State<PaymentPage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: AppColors.pinkcm,
-        toolbarHeight: height * .13,
+        toolbarHeight: height * .1,
         leading: IconButton(
           icon: Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.white, size: 30),
           onPressed: () {
@@ -190,10 +190,10 @@ class _PaymentPageState extends State<PaymentPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 SizedBox(height: height * .05),
-                _buildContainerRow(width, height, 'Net', widget.data.total.toString(), AppColors.pinkcm, 150),
-                _buildContainerRow(width, height, 'Net Total', double.parse(widget.data.total!).toStringAsFixed(2), AppColors.pinkcm, 20),
-                _buildContainerRow(width, height, 'Total', double.parse(widget.data.total!).toStringAsFixed(2), AppColors.pinkcm, 110),
-                _buildContainerRow(width, height, 'vat', widget.data.vat.toString(), AppColors.pinkcm, 160),
+                _buildContainerRow(width, height, 'Net', widget.data.total.toString(), AppColors.pinkcm),
+                _buildContainerRow(width, height, 'Net Total', double.parse(widget.data.total!).toStringAsFixed(2), AppColors.pinkcm),
+                _buildContainerRow(width, height, 'Total', double.parse(widget.data.total!).toStringAsFixed(2), AppColors.pinkcm),
+                _buildContainerRow(width, height, 'vat', widget.data.vat.toString(), AppColors.pinkcm),
                 _buildChange(width, height)
               ],
             ),
@@ -343,10 +343,10 @@ class _PaymentPageState extends State<PaymentPage> {
 
   Widget _buildChange(double width, double height) {
     return Container(
-      width: width * .39,
+      width: width * .383,
       height: height * .12,
       margin: EdgeInsets.only(left: width * .025),
-      padding: EdgeInsets.only(left: width * .025),
+      padding: EdgeInsets.only(left: width * .025, right: width * .025),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8),
         // border: Border.all(color: Colors.orangeAccent),
@@ -354,10 +354,10 @@ class _PaymentPageState extends State<PaymentPage> {
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text('Change :',
             style: TextStyle(fontFamily: AppFonts.traJanProBold, fontSize: width * .025, color: AppColors.blueReceive)),
-          const SizedBox(width: 65),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.center,
@@ -380,6 +380,12 @@ class _PaymentPageState extends State<PaymentPage> {
 
   Widget _buildButton(double width, String title, VoidCallback? onPressed, double height, double size) {
     Color getTextColor(String title, String text, int price) {
+      if (title == 'Cancel') return AppColors.white;
+      final value = double.tryParse(text);
+      return ((value ?? 0) >= price) ? Colors.white : Colors.grey;
+    }
+
+    Color bgColor(String title, String text, int price) {
       if (title == 'Cancel') return AppColors.redBg;
       final value = double.tryParse(text);
       return ((value ?? 0) >= price) ? const Color.fromARGB(255, 60, 114, 57) : Colors.grey;
@@ -391,26 +397,29 @@ class _PaymentPageState extends State<PaymentPage> {
         width: width,
         height: height, //115
         decoration: BoxDecoration(
-          border: Border.all(color: getTextColor(title, _controllNumPad.text, double.parse(widget.data.total ?? '0').toInt()), width: 3),
+          border: Border.all(color: bgColor(title, _controllNumPad.text, double.parse(widget.data.total ?? '0').toInt()), width: 3),
           borderRadius: BorderRadius.circular(8),
-          color: title == 'Cancel' ? AppColors.cancelColor : (int.tryParse(_controllNumPad.text) ?? 0) >= double.parse(widget.data.total ?? '0') ? AppColors.confirmColor : null
+          color: title == 'Cancel' ? AppColors.redBg : (int.tryParse(_controllNumPad.text) ?? 0) >= double.parse(widget.data.total ?? '0') ? const Color.fromARGB(255, 60, 114, 57) : null
         ),
         child: Center(child: Text(title, style: TextStyle(fontFamily: AppFonts.traJanPro, fontSize: size * .02, fontWeight: FontWeight.bold, color: getTextColor(title, _controllNumPad.text, double.parse(widget.data.total ?? '0').toInt())))),
       ),
     );
   }
 
-  Widget _buildContainerRow(double width, double height, String title, String value, Color colorValue, double range) {
+  Widget _buildContainerRow(double width, double height, String title, String value, Color colorValue) {
     return Container(
-      width: width * .37,
+      width: width * .335,
       height: height * .12,
       margin: EdgeInsets.only(left: width * .05),
+      /* decoration: BoxDecoration(
+        border: Border.all(color: Colors.orangeAccent),
+      ), */
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text('$title :',
             style: TextStyle(fontFamily: AppFonts.traJanProBold, fontSize: width * .025, color: AppColors.blueReceive)),
-          SizedBox(width: range),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

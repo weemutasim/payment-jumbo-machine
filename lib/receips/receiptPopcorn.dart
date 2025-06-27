@@ -3,6 +3,7 @@ import 'package:esc_pos_printer/esc_pos_printer.dart';
 import 'package:esc_pos_utils/esc_pos_utils.dart';
 import 'package:image/image.dart' as img;
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../model/mdDetail.dart';
 import '../utils/formatDateTime.dart';
 
@@ -30,6 +31,7 @@ Future<void> printReceiptPopcorn(BuildContext context, int num, img.Image? head,
 
   printer.image(head!);
   printer.text(formatDateReceip(DateTime.now()), styles: const PosStyles(align: PosAlign.center, height: PosTextSize.size2, width: PosTextSize.size2));
+  printer.text('TIME : ${DateFormat('HH:mm').format(DateTime.now())}', styles: const PosStyles(align: PosAlign.center));
   printer.text('Carnival Magic Co.,Ltd. (0000)', styles: const PosStyles(align: PosAlign.center));
   printer.text('TAX ID: 0835557013779    *VAT INCLUDED*', styles: const PosStyles(align: PosAlign.center));
   printer.text('TEL : (076)385-555', styles: const PosStyles(align: PosAlign.center));
