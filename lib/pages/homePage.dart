@@ -23,6 +23,7 @@ class _HomePageState extends State<HomePage> {
   List<GetPopcornTMP> _listTmp = [];
   List<GetPopcornTMP>? _filterTmp;
   List<Details> _details = [];
+  bool _isDialogShowing = false;
 
   Timer? _autoRefreshTimer;
   bool loadData = false;
@@ -70,10 +71,13 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  void _searchSaleno(String searchDocNo, {GetPopcornTMP? data}) async {
+  void _searchSaleno(String searchDocNo) async {
     if (searchDocNo.isNotEmpty) {
       _filterTmp = _listTmp.where((item) => item.saleno!.toLowerCase().contains(searchDocNo.toLowerCase())).toList();
-      if (_filterTmp!.isEmpty) _alertDialog();
+      if (_filterTmp!.isEmpty && !_isDialogShowing) {
+        _isDialogShowing = true;
+        _alertDialog();
+      }
     } else {
       _filterTmp!.clear();
       _details.clear();
@@ -108,6 +112,7 @@ class _HomePageState extends State<HomePage> {
                   _controller.clear();
                   _searchSaleno('');
                   _focusNode.requestFocus();
+                  _isDialogShowing = false;
                   Navigator.of(context).pop();
                 }, 
                 label: Text('Retry', style: TextStyle(fontFamily: AppFonts.traJanProBold, color: AppColors.white, fontSize: 20)), 
@@ -278,13 +283,12 @@ class _HomePageState extends State<HomePage> {
       height: height * 0.15,
       margin: const EdgeInsets.only(left: 20, top: 10),
       child: TextField(
-        // readOnly: true,
         showCursor: false,
         focusNode: _focusNode,
         controller: _controller,
         keyboardType: TextInputType.none, //TextInputType.none
         style: TextStyle(fontFamily: AppFonts.traJanProBold, fontSize: width * .025, color: AppColors.black),
-        onChanged: (value) { //search
+        onSubmitted: (value) { //search
           _searchSaleno(value);
         },
         inputFormatters: <TextInputFormatter>[
@@ -299,6 +303,7 @@ class _HomePageState extends State<HomePage> {
             onPressed: () {
               _controller.clear();
               _searchSaleno('');
+              _isDialogShowing = false;
               _focusNode.requestFocus();
             },
             icon: Icon(Icons.close_rounded, color: AppColors.redBg, size: width * .035),

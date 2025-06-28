@@ -7,9 +7,7 @@ import 'package:intl/intl.dart';
 import '../model/mdDetail.dart';
 import '../utils/formatDateTime.dart';
 
-Future<void> printReceiptQRGameNew(BuildContext context, img.Image? head, img.Image? body, img.Image? underLine, img.Image? thank, img.Image? fstar, ListDetails games, double total, String saleno, String taxid, img.Image? combinedImage, img.Image? line2) async {
-  const ipPrinter = "192.168.4.248";
-  
+Future<void> printReceiptQRGameNew(BuildContext context, img.Image? head, img.Image? body, img.Image? underLine, img.Image? thank, img.Image? fstar, ListDetails games, double total, String saleno, String taxid, img.Image? combinedImage, img.Image? line2, String ipPrinter) async {
   const PaperSize paper = PaperSize.mm80;
   final profile = await CapabilityProfile.load();
   final printer = NetworkPrinter(paper, profile);
@@ -33,8 +31,7 @@ Future<void> printReceiptQRGameNew(BuildContext context, img.Image? head, img.Im
   printer.text('');
   printer.image(body!);
   printer.text('');
-  printer.image(underLine!);
-  printer.text('');
+  printer.text('RECEIPT', styles: const PosStyles(align: PosAlign.center));
   printer.text(formatDateReceip(DateTime.now()), styles: const PosStyles(align: PosAlign.center, height: PosTextSize.size2, width: PosTextSize.size2));
   printer.text('TIME : ${DateFormat('HH:mm').format(DateTime.now())}', styles: const PosStyles(align: PosAlign.center));
   printer.text('Carnival Magic Co.,Ltd. (0000)', styles: const PosStyles(align: PosAlign.center));
@@ -43,8 +40,6 @@ Future<void> printReceiptQRGameNew(BuildContext context, img.Image? head, img.Im
   printer.text('TEL : (076)385-555', styles: const PosStyles(align: PosAlign.center));
   printer.text('NO. $saleno');
   printer.text('JUMBOree 1', styles: const PosStyles(height: PosTextSize.size2, align: PosAlign.center));
-  printer.text('');
-  printer.image(underLine);
   printer.text('');
   printer.row(
     [
@@ -56,10 +51,10 @@ Future<void> printReceiptQRGameNew(BuildContext context, img.Image? head, img.Im
   );
   printer.row( //เกิน 12 error
     [
-      buildPosCol('1', 1, PosAlign.left), //${games['quantity']}
+      buildPosCol('1', 1, PosAlign.left),
       buildPosCol('${games.salename}', 7, PosAlign.left),
       buildPosCol('${double.parse(games.priceunit ?? '0').toInt()}', 2, PosAlign.left),
-      buildPosCol('${double.parse(games.priceunit ?? '0').toInt()}', 2, PosAlign.left), //${games['total'].toInt()}
+      buildPosCol('${double.parse(games.priceunit ?? '0').toInt()}', 2, PosAlign.left),
     ]
   );
   printer.image(line2!);
@@ -67,9 +62,8 @@ Future<void> printReceiptQRGameNew(BuildContext context, img.Image? head, img.Im
   printer.image(line2);
   printer.text('  CREDIT       ${double.parse(games.priceunit ?? '0').toStringAsFixed(2)}', styles: const PosStyles(width: PosTextSize.size2, bold: true)); //${total.toStringAsFixed(2)}
   printer.text('');
-  printer.image(underLine);
-  printer.text('');
   printer.image(thank!);
+  printer.qrcode(saleno);
   printer.text('');
   printer.text('POS ID : $taxid', styles: const PosStyles(align: PosAlign.center));
 

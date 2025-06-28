@@ -138,3 +138,5 @@ Future<void> _loadImages() async {
         final data = (_filtertmp ?? _listPopcorntmp)[index];
         return GestureDetector(
           wfhws,
+
+          if (_filterTmp!.isEmpty) _alertDialog(); ทำไม่ถึงเปิดหลายครั้งเกิดจากอะไร

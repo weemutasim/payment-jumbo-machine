@@ -29,6 +29,7 @@ class PaymentPage extends StatefulWidget {
 }
 
 class _PaymentPageState extends State<PaymentPage> {
+  final ipPrinter = "192.168.4.248";
   late SimpleFontelicoProgressDialog _dialog;
   final NumberFormat numberFormat = NumberFormat('#,###', 'en_US');
   final TextEditingController _controllNumPad = TextEditingController();
@@ -114,7 +115,7 @@ class _PaymentPageState extends State<PaymentPage> {
     try {
       headPop = await loadAndResizeImage('assets/images/JUMBO.png', 500);
       thank = await loadAndResizeImage('assets/images/thk1.png', 500);
-      headENG = await loadAndResizeImage('assets/images/headENG.png', 500);
+      headENG = await loadAndResizeImage('assets/images/headENG.png', 550);
       game2 = await loadAndResizeImage('assets/images/2Game.png', 120);
       game5 = await loadAndResizeImage('assets/images/5Game.png', 120);
       game10 = await loadAndResizeImage('assets/images/10Game.png', 120);
@@ -272,7 +273,7 @@ class _PaymentPageState extends State<PaymentPage> {
                 coupon: "", //ว่าง
                 totCoupon: "", //ว่าง
               ).then((value) async {
-                await printReceiptPopcorn(context, value['queue'], headPop, line1, thank, saleno, shopPopcorn[0].taxid!, dataDetails!, double.parse(widget.data.total ?? '0'), change);
+                await printReceiptPopcorn(context, value['queue'], headPop, line1, thank, saleno, shopPopcorn[0].taxid!, dataDetails!, double.parse(widget.data.total ?? '0'), change, ipPrinter);
               });
             } else if(chk == 'gtmp') {
               final shopGame = await Dbconnect().salenoGame();
@@ -320,7 +321,7 @@ class _PaymentPageState extends State<PaymentPage> {
 
                     final qrImage = await _generateQRCode(shopGame[0].saleno!, 180);
                     final combined = _combineImagesWithOffset([fStar!, qrImage, select!], 40);
-                    await printReceiptQRGameNew(context, headENG, nonRefun, line1, thank, fStar, game, 100, shopGame[0].saleno!, shopGame[0].taxid!, combined, line2);
+                    await printReceiptQRGameNew(context, headENG, nonRefun, line1, thank, fStar, game, 100, shopGame[0].saleno!, shopGame[0].taxid!, combined, line2, ipPrinter);
                     await Future.delayed(const Duration(milliseconds: 400));
                   }
                 }

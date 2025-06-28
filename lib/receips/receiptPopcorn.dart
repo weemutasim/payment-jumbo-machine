@@ -8,9 +8,7 @@ import '../model/mdDetail.dart';
 import '../utils/formatDateTime.dart';
 
 
-Future<void> printReceiptPopcorn(BuildContext context, int num, img.Image? head, img.Image? underLine, img.Image? thank, String saleno, String taxid, List<ListDetails> popcorns, double total, double change) async {
-  const ipPrinter = "192.168.4.248";
-  
+Future<void> printReceiptPopcorn(BuildContext context, int num, img.Image? head, img.Image? underLine, img.Image? thank, String saleno, String taxid, List<ListDetails> popcorns, double total, double change, String ipPrinter) async {
   const PaperSize paper = PaperSize.mm80;
   final profile = await CapabilityProfile.load();
   final printer = NetworkPrinter(paper, profile);
@@ -37,7 +35,7 @@ Future<void> printReceiptPopcorn(BuildContext context, int num, img.Image? head,
   printer.text('TEL : (076)385-555', styles: const PosStyles(align: PosAlign.center));
   printer.text('TAX INVOICE (ABB)', styles: const PosStyles(align: PosAlign.center));
   printer.text('NO. $saleno');
-  printer.text('Queue No. : J$num', styles: const PosStyles(width: PosTextSize.size2, bold: true));  //เพิ่ม queue J1
+  printer.text('Queue No. : $num', styles: const PosStyles(width: PosTextSize.size2, bold: true));  //เพิ่ม queue J1
   printer.image(underLine!);
   printer.text('------------------------------------------------');
   printer.row(
